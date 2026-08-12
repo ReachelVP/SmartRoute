@@ -74,4 +74,14 @@ Cada `push` o `pull request` a `main` dispara el workflow de GitHub Actions (`.g
 que compila el backend (`./gradlew build`) y el frontend (`npm run build`) por separado. El estado
 se puede ver en la pestaña **Actions** del repositorio.
 
+## Arquitectura
+
+Ver el [diagrama de arquitectura](docs/diagrama-arquitectura.md) con el detalle de las capas y su
+interacción.
+
+## Próximos pasos (Laboratorio 1)
+
+- [ ] Propuesta de dominio (entidades y procesos de negocio)
+- [x] Diagrama de arquitectura
+- [ ] ADR de al menos una decisión de arquitectura (`/docs/adr/`)
 
