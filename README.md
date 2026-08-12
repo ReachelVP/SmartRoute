@@ -12,7 +12,7 @@ paseo.
 ## Equipo
 
 - Reachel Paola Valverde Pérez
-- Kimberley Julissa Gómez Quesada
+
 
 ## Stack
 
