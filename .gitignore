@@ -1,0 +1,9 @@
+# Editores / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
