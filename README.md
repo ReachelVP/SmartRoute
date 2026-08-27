@@ -16,11 +16,12 @@ paseo.
 
 ## Stack
 
-| Capa     | Tecnología                                  |
-| -------- | -------------------------------------------- |
-| Backend  | Java 21 · Spring Boot 4 · Gradle             |
-| Frontend | React · Vite                                 |
-| CI       | GitHub Actions (`.github/workflows/ci.yml`)  |
+| Capa       | Tecnología                                    |
+| ---------- | ---------------------------------------------- |
+| Backend    | Java 21 · Spring Boot 4 · Gradle              |
+| Frontend   | React · Vite                                  |
+| Base de datos | SQL Server (relacional) · MongoDB (documental) — ver [modelo de datos](docs/modelo-datos.md) |
+| CI         | GitHub Actions (`.github/workflows/ci.yml`)   |
 
 ## Estructura del repositorio
 
@@ -42,6 +43,16 @@ conoce la capa de presentación.
 - [Java 21](https://adoptium.net/) (si no está instalado, Gradle intentará descargarlo
   automáticamente al compilar)
 - [Node.js 20+](https://nodejs.org/)
+- [Docker](https://www.docker.com/) (para SQL Server y MongoDB)
+
+### Base de datos
+
+```bash
+docker compose up -d
+```
+
+Levanta SQL Server y MongoDB, y crea automáticamente la base `smartroute` (ver
+[detalle del modelo de datos](docs/modelo-datos.md)).
 
 ### Backend
 
@@ -50,7 +61,8 @@ cd backend
 ./gradlew bootRun      # Windows: gradlew bootRun
 ```
 
-Queda escuchando en `http://localhost:8080`. Verificar que está arriba:
+Con la base de datos arriba, al iniciar aplica las migraciones de Flyway y siembra MongoDB
+automáticamente. Queda escuchando en `http://localhost:8080`. Verificar que está arriba:
 
 ```bash
 curl http://localhost:8080/api/salud
@@ -79,9 +91,10 @@ se puede ver en la pestaña **Actions** del repositorio.
 Ver el [diagrama de arquitectura](docs/diagrama-arquitectura.md) con el detalle de las capas y su
 interacción.
 
-## Próximos pasos (Laboratorio 1)
+## Próximos pasos
 
-- [ ] Propuesta de dominio (entidades y procesos de negocio)
+- [x] Propuesta de dominio (entidades y procesos de negocio) — [docs/Propuesta de dominio.docx](<docs/Propuesta de dominio.docx>)
 - [x] Diagrama de arquitectura
 - [ ] ADR de al menos una decisión de arquitectura (`/docs/adr/`)
+- [x] Modelo de datos relacional (SQL Server) + subdominio documental (MongoDB) — Laboratorio 2
 

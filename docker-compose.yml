@@ -1,0 +1,44 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "SmartRoute#2026"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # SQL Server, a diferencia de Postgres, no crea la base de datos de la app a partir de variables
+  # de entorno. Este contenedor de un solo uso la crea (si no existe) apenas sqlserver está sano.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >
+        /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P "$$MSSQL_SA_PASSWORD" -C
+        -Q "IF DB_ID('smartroute') IS NULL CREATE DATABASE smartroute;"
+    environment:
+      MSSQL_SA_PASSWORD: "SmartRoute#2026"
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  sqlserverdata:
+  mongodata:

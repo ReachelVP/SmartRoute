@@ -13,6 +13,26 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      MSSQL_SA_PASSWORD: SmartRoute2026Ci
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: SmartRoute2026Ci
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P SmartRoute2026Ci -C -Q 'SELECT 1' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=45s
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
     steps:
       - uses: actions/checkout@v4
 
@@ -25,8 +45,17 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # La imagen de SQL Server no crea la base de datos de la app sola (a diferencia de Postgres);
+      # se crea reutilizando el sqlcmd que ya trae el propio contenedor del servicio.
+      - name: Create application database
+        run: |
+          CID=$(docker ps --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest" --format "{{.ID}}" | head -n1)
+          docker exec "$CID" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "IF DB_ID('smartroute') IS NULL CREATE DATABASE smartroute;"
+
       - name: Build with Gradle
         run: ./gradlew build
+        env:
+          SPRING_DATASOURCE_PASSWORD: ${{ env.MSSQL_SA_PASSWORD }}
 
   frontend-build:
     name: Frontend (React + Vite)
