@@ -25,6 +25,11 @@ public class Categoria {
         return id;
     }
 
+    /** Solo para construir instancias en pruebas unitarias; JPA asigna el id real al persistir. */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getNombre() {
         return nombre;
     }

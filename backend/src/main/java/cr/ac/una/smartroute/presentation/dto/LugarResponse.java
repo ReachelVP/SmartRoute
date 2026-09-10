@@ -1,0 +1,25 @@
+package cr.ac.una.smartroute.presentation.dto;
+
+import cr.ac.una.smartroute.data.entity.Lugar;
+import java.math.BigDecimal;
+
+public record LugarResponse(
+        Long id,
+        String nombre,
+        String categoria,
+        String provincia,
+        BigDecimal costoEstimado,
+        String nivelAccesibilidad,
+        boolean requiereTransportePropio) {
+
+    public static LugarResponse from(Lugar lugar) {
+        return new LugarResponse(
+                lugar.getId(),
+                lugar.getNombre(),
+                lugar.getCategoria().getNombre(),
+                lugar.getProvincia().getNombre(),
+                lugar.getCostoEstimado(),
+                lugar.getNivelAccesibilidad(),
+                lugar.isRequiereTransportePropio());
+    }
+}

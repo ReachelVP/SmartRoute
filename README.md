@@ -89,12 +89,30 @@ se puede ver en la pestaña **Actions** del repositorio.
 ## Arquitectura
 
 Ver el [diagrama de arquitectura](docs/diagrama-arquitectura.md) con el detalle de las capas y su
-interacción.
+interacción, y [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md) con el porqué de esa
+organización y las alternativas que se descartaron.
+
+## API
+
+| Método | Endpoint | Descripción |
+| --- | --- | --- |
+| GET | `/api/salud` | Chequeo simple de salud. |
+| GET | `/api/lugares?provinciaId=` | Lugares de una provincia. |
+| POST | `/api/recomendaciones` | Aplica los filtros del Proceso 1 (categorías de interés, provincia, transporte propio, presupuesto) sobre el catálogo de lugares. |
+
+```bash
+curl -X POST http://localhost:8080/api/recomendaciones \
+  -H "Content-Type: application/json" \
+  -d '{"provinciaId":1,"categoriaIds":[3],"presupuestoMaximo":5000,"tieneTransportePropio":false}'
+```
 
 ## Próximos pasos
 
-- [x] Propuesta de dominio (entidades y procesos de negocio) — [docs/Propuesta de dominio.docx](<docs/Propuesta de dominio.docx>)
-- [x] Diagrama de arquitectura
-- [ ] ADR de al menos una decisión de arquitectura (`/docs/adr/`)
-- [x] Modelo de datos relacional (SQL Server) + subdominio documental (MongoDB) — Laboratorio 2
+- [x] Propuesta de dominio (entidades y procesos de negocio) — [docs/propuesta-dominio.md](docs/propuesta-dominio.md)
+- [x] Diagrama de arquitectura — [docs/diagrama-arquitectura.md](docs/diagrama-arquitectura.md)
+- [x] ADR de al menos una decisión de arquitectura — [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md)
+- [x] Modelo de datos relacional (SQL Server) + subdominio documental (MongoDB) — Laboratorio 2 — [docs/modelo-datos.md](docs/modelo-datos.md)
+- [ ] Flujo de negocio completo de `Lugar` y recomendación (Proceso 1) conectado al frontend
+- [ ] Que `RecomendacionService` escriba en la bitácora de MongoDB en cada recomendación real
+- [ ] Confirmación de itinerario (Proceso 2) como transacción — Laboratorio 4
 

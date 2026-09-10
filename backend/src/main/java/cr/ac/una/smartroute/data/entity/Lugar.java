@@ -26,11 +26,15 @@ public class Lugar {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String descripcion;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // EAGER a propósito: el nombre de la provincia y la categoría son parte de cómo se muestra un
+    // Lugar en casi cualquier respuesta (LugarResponse, RecomendacionResponse); con LAZY y
+    // spring.jpa.open-in-view=false, el proxy ya no tiene sesión abierta para resolverse al mapear
+    // la entidad a DTO en la capa de presentación.
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "provincia_id", nullable = false)
     private Provincia provincia;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
 
@@ -51,6 +55,11 @@ public class Lugar {
 
     public Long getId() {
         return id;
+    }
+
+    /** Solo para construir instancias en pruebas unitarias; JPA asigna el id real al persistir. */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNombre() {
