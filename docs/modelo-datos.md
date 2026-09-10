@@ -93,6 +93,20 @@ momento**.
 }
 ```
 
+### Índice y validación
+
+`docker/mongo-init/init-recomendaciones-log.js` crea la colección con:
+
+- **Índice compuesto `{ usuarioId: 1, fecha: -1 }`** — el patrón de lectura real es "el historial
+  de este usuario, del más reciente al más antiguo"; sin este índice esa consulta requeriría
+  recorrer toda la colección. La entidad Java (`RecomendacionLog`) lo declara también vía
+  `@CompoundIndex`, como respaldo para cuando la app corre contra un Mongo que no pasó por el
+  script (p. ej. en CI, donde el contenedor de Mongo se crea sin volúmenes montados).
+- **Validador `$jsonSchema`** sobre `usuarioId`, `fecha` y la forma de `criterios` (sus 4 campos) —
+  evita documentos malformados en los campos que la aplicación sí necesita sin poder inferir.
+  `lugaresSugeridos` y `planesGenerados` quedan sin validación estricta a propósito: son la parte de
+  esquema flexible del documento, y sobre-validarlos anularía la razón de estar en MongoDB.
+
 ### Justificación (las 3 preguntas de diseño)
 
 1. **¿Cómo se lee el 90% del tiempo?** Completo, como un solo evento histórico: "qué le
@@ -114,16 +128,24 @@ calificación por lugar), algo que el modelo relacional resuelve mejor que un do
 ## Cómo levantar todo
 
 ```bash
-docker compose up -d          # SQL Server + Mongo (crea la base "smartroute" automáticamente)
-cd backend
-./gradlew bootRun             # aplica las migraciones Flyway y siembra Mongo al arrancar
+docker compose up -d
 ```
+
+Ese solo comando deja **ambas** bases listas, sin necesidad de correr la aplicación:
+
+- `sqlserver` + `sqlserver-init` levantan SQL Server y crean la base `smartroute`.
+- `flyway` aplica `V1__esquema_inicial.sql` y `V2__datos_semilla.sql` contra esa base en cuanto
+  `sqlserver-init` termina.
+- `mongo` arranca con `docker/mongo-init/init-recomendaciones-log.js` montado en
+  `docker-entrypoint-initdb.d/`, que crea la colección `recomendaciones_log` (con su validador e
+  índice) y la siembra con 12 documentos de ejemplo — pero solo la primera vez que el volumen de
+  datos está vacío; si ya existe, este script no vuelve a correr.
+
+Después, `cd backend && ./gradlew bootRun` solo arranca la aplicación (Flyway y el seeder de Mongo
+también corren ahí, pero de forma idempotente: si el dato ya existe, no hacen nada).
 
 Verificación rápida:
 
 ```bash
 curl http://localhost:8080/actuator/health   # "status":"UP"
 ```
-
-Las migraciones viven en `backend/src/main/resources/db/migration/` (`V1__esquema_inicial.sql`,
-`V2__datos_semilla.sql`) y corren solas al iniciar la aplicación — no requieren un paso manual.

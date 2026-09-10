@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -11,8 +12,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * (Proceso 1/2 del dominio) le genera sugerencias a un usuario. Se incrusta una foto de los
  * criterios y de los lugares/planes sugeridos en ese momento (no debe cambiar si el lugar real se
  * edita después); {@code usuarioId} es una referencia plana hacia el usuario en SQL Server.
+ *
+ * <p>El índice {@code usuarioId + fecha} responde el patrón de lectura real: el historial de un
+ * usuario, del más reciente al más antiguo. El script de arranque de Mongo
+ * ({@code docker/mongo-init/}) ya lo crea junto con el validador de esquema; esta anotación es un
+ * respaldo para cuando la app corre contra un Mongo que no pasó por ese script (p. ej. en CI).
  */
 @Document(collection = "recomendaciones_log")
+@CompoundIndex(name = "idx_usuario_fecha", def = "{'usuarioId': 1, 'fecha': -1}")
 public class RecomendacionLog {
 
     @Id

@@ -51,8 +51,8 @@ conoce la capa de presentación.
 docker compose up -d
 ```
 
-Levanta SQL Server y MongoDB, y crea automáticamente la base `smartroute` (ver
-[detalle del modelo de datos](docs/modelo-datos.md)).
+Levanta SQL Server y MongoDB, crea la base `smartroute`, aplica las migraciones y siembra ambas
+bases — sin necesidad de correr la aplicación (ver [detalle del modelo de datos](docs/modelo-datos.md)).
 
 ### Backend
 
@@ -61,8 +61,7 @@ cd backend
 ./gradlew bootRun      # Windows: gradlew bootRun
 ```
 
-Con la base de datos arriba, al iniciar aplica las migraciones de Flyway y siembra MongoDB
-automáticamente. Queda escuchando en `http://localhost:8080`. Verificar que está arriba:
+Queda escuchando en `http://localhost:8080`. Verificar que está arriba:
 
 ```bash
 curl http://localhost:8080/api/salud
