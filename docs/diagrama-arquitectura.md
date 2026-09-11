@@ -1,8 +1,10 @@
 # Diagrama de arquitectura — SmartRoute
 
 Arquitectura en capas del backend (Spring Boot) y su interacción con el frontend (React) y las
-bases de datos. Refleja el código entregado a la fecha (Laboratorios 1 y 2, más el primer flujo de
-negocio completo: `Lugar` y la recomendación del Proceso 1).
+bases de datos. Refleja el código entregado a la fecha (Laboratorios 1 a 3): el flujo de negocio de
+`Lugar` y la recomendación del Proceso 1, más los repositorios generalizados, las consultas de
+negocio y la corrección del problema N+1 del Laboratorio 3
+(ver [docs/consultas-negocio.md](consultas-negocio.md)).
 
 ```mermaid
 flowchart TD
@@ -26,9 +28,11 @@ flowchart TD
         end
 
         subgraph Data["data"]
-            LR["LugarRepository<br/>+ 7 repositorios JPA más"]
+            BASE["BaseRepository&lt;T, ID&gt;<br/>JpaRepository + JpaSpecificationExecutor"]
+            LR["LugarRepository, ItinerarioRepository<br/>+ 6 repositorios JPA más"]
+            SPEC["LugarSpecifications<br/>ItinerarioSpecifications"]
             SEED["RecomendacionLogSeeder<br/>(bootstrap, no request)"]
-            RL["RecomendacionLogRepository<br/>(Mongo)"]
+            RL["RecomendacionLogRepository<br/>(Mongo, extends BaseMongoRepository)"]
         end
 
         subgraph Config["config"]
@@ -48,8 +52,11 @@ flowchart TD
     RC --> RS
     RS --> RF
     RS --> LR
+    LR -.-> BASE
+    LR -.-> SPEC
     LR --> SQL
     SEED --> RL
+    RL -.-> BASE
     RL --> MONGO
 
     CC -. "aplica CORS sobre /api/**" .-> Presentation
@@ -66,7 +73,7 @@ recomendación real. Conectar ambas cosas es un paso pendiente (ver más abajo).
 | --- | --- | --- | --- |
 | Presentación | `cr.ac.una.smartroute.presentation` | Recibe peticiones HTTP, valida forma de entrada y devuelve DTOs (nunca entidades JPA). | `HealthController`, `LugarController`, `RecomendacionController`, DTOs en `presentation.dto`. |
 | Negocio | `cr.ac.una.smartroute.business` | Reglas, cálculos y validaciones del dominio. No conoce HTTP; no construye SQL. | `LugarService`, `RecomendacionService`, y `RecomendacionFilters` — los cuatro filtros del Proceso 1 como funciones puras, probadas con JUnit sin Spring ni base de datos (`RecomendacionFiltersTest`). |
-| Datos | `cr.ac.una.smartroute.data` | Acceso y persistencia. | 8 entidades JPA + repositorios (SQL Server) y `RecomendacionLog` + repositorio (MongoDB). |
+| Datos | `cr.ac.una.smartroute.data` | Acceso y persistencia. | 8 entidades JPA + repositorios generalizados (`BaseRepository` con soporte de Specifications) sobre SQL Server, y `RecomendacionLog` + `BaseMongoRepository` sobre MongoDB. Dos consultas JPQL y dos Specifications documentadas en [docs/consultas-negocio.md](consultas-negocio.md). |
 | Configuración | `cr.ac.una.smartroute.config` | Configuración transversal, fuera del flujo de negocio. | `CorsConfig`. |
 
 ## Regla de dependencia

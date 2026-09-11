@@ -21,6 +21,7 @@ paseo.
 | Backend    | Java 21 · Spring Boot 4 · Gradle              |
 | Frontend   | React · Vite                                  |
 | Base de datos | SQL Server (relacional) · MongoDB (documental) — ver [modelo de datos](docs/modelo-datos.md) |
+| Pruebas    | JUnit 5 (reglas puras) + Testcontainers (integración contra SQL Server/Mongo reales) |
 | CI         | GitHub Actions (`.github/workflows/ci.yml`)   |
 
 ## Estructura del repositorio
@@ -79,17 +80,32 @@ npm run dev
 Queda escuchando en `http://localhost:5173` y se conecta automáticamente al backend en el puerto
 8080 (con el backend corriendo, la página muestra el estado de la conexión).
 
+### Pruebas
+
+```bash
+cd backend
+./gradlew test
+```
+
+No hace falta `docker compose up` para esto: las pruebas de integración levantan su propio SQL
+Server y Mongo con [Testcontainers](https://testcontainers.com/) (contenedores desechables,
+independientes de los de desarrollo) — solo necesitás Docker corriendo. Las reglas de negocio puras
+(`RecomendacionFiltersTest`) ni siquiera necesitan eso. Detalle de las consultas de negocio y la
+corrección de un problema N+1 real en [docs/consultas-negocio.md](docs/consultas-negocio.md).
+
 ## Integración continua
 
 Cada `push` o `pull request` a `main` dispara el workflow de GitHub Actions (`.github/workflows/ci.yml`),
-que compila el backend (`./gradlew build`) y el frontend (`npm run build`) por separado. El estado
-se puede ver en la pestaña **Actions** del repositorio.
+que compila y prueba el backend (`./gradlew build`, con sus propias pruebas de integración vía
+Testcontainers) y el frontend (`npm run build`) por separado. El estado se puede ver en la pestaña
+**Actions** del repositorio.
 
 ## Arquitectura
 
 Ver el [diagrama de arquitectura](docs/diagrama-arquitectura.md) con el detalle de las capas y su
-interacción, y [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md) con el porqué de esa
-organización y las alternativas que se descartaron.
+interacción, [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md) con el porqué de esa organización
+y las alternativas que se descartaron, y [docs/consultas-negocio.md](docs/consultas-negocio.md) con
+las consultas de negocio (JPQL + Specifications) y la corrección de un problema N+1 real.
 
 ## API
 
@@ -111,6 +127,7 @@ curl -X POST http://localhost:8080/api/recomendaciones \
 - [x] Diagrama de arquitectura — [docs/diagrama-arquitectura.md](docs/diagrama-arquitectura.md)
 - [x] ADR de al menos una decisión de arquitectura — [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md)
 - [x] Modelo de datos relacional (SQL Server) + subdominio documental (MongoDB) — Laboratorio 2 — [docs/modelo-datos.md](docs/modelo-datos.md)
+- [x] Repositorios generalizados, consultas de negocio (JPQL + Specifications) y corrección de un N+1 real, con pruebas de integración vía Testcontainers — Laboratorio 3 — [docs/consultas-negocio.md](docs/consultas-negocio.md)
 - [ ] Flujo de negocio completo de `Lugar` y recomendación (Proceso 1) conectado al frontend
 - [ ] Que `RecomendacionService` escriba en la bitácora de MongoDB en cada recomendación real
 - [ ] Confirmación de itinerario (Proceso 2) como transacción — Laboratorio 4
