@@ -52,10 +52,16 @@ class PerfilPreferenciasRepositoryIT extends AbstractIntegrationTest {
         perfil.setActualizadoEn(LocalDateTime.now());
         perfil = perfilPreferenciasRepository.save(perfil);
         Long perfilId = perfil.getId();
+        entityManager.flush(); // asegura que usuario y perfil ya existan en la base antes de borrar
 
-        usuarioRepository.delete(usuario);
+        // Desvincula perfil (y usuario) de la sesión: si quedan gestionados, Hibernate revisa sus
+        // referencias al vaciar el siguiente flush y confunde a "usuario" (recién marcado para
+        // borrar) con una instancia transitoria. Al desvincularlos, es la base de datos —no
+        // Hibernate— la que aplica el ON DELETE CASCADE que se quiere probar.
+        entityManager.clear();
+
+        usuarioRepository.deleteById(usuario.getId());
         entityManager.flush();
-        entityManager.clear(); // sin esto, findById podría devolver la entidad cacheada del 1er nivel
 
         assertTrue(perfilPreferenciasRepository.findById(perfilId).isEmpty());
     }
