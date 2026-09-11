@@ -2,8 +2,8 @@ package cr.ac.una.smartroute;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.mongodb.MongoDBContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
 
 /**
  * Base para pruebas de integración contra bases de datos reales. Los contenedores son
@@ -18,8 +18,8 @@ import org.testcontainers.containers.MongoDBContainer;
  */
 public abstract class AbstractIntegrationTest {
 
-    private static final MSSQLServerContainer<?> SQLSERVER =
-            new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
+    private static final MSSQLServerContainer SQLSERVER =
+            new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
 
     private static final MongoDBContainer MONGO = new MongoDBContainer("mongo:7");
 
