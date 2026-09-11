@@ -2,9 +2,8 @@ package cr.ac.una.smartroute.data.repository;
 
 import cr.ac.una.smartroute.data.entity.Lugar;
 import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface LugarRepository extends JpaRepository<Lugar, Long> {
+public interface LugarRepository extends BaseRepository<Lugar, Long> {
 
     List<Lugar> findByProvinciaId(Long provinciaId);
 }

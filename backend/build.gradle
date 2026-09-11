@@ -27,6 +27,9 @@ dependencies {
 	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-mssqlserver'
+	testImplementation 'org.testcontainers:testcontainers-mongodb'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
