@@ -141,8 +141,15 @@ ItinerarioParada.
 - Todos los lugares referenciados deben existir y estar activos al momento de confirmar.
 - **Todo o nada:** el Itinerario y todas sus ItinerarioParada se crean en una sola operación — si
   una sola parada falla una validación (horario, lugar inexistente, presupuesto excedido sin
-  confirmación), no se guarda ningún registro. Este es el punto que van a implementar como
-  transacción en el Laboratorio 4.
+  confirmación), no se guarda ningún registro. Este es el punto que se implementó como transacción
+  en el Laboratorio 4.
+
+> Implementado en el Laboratorio 4: `ConfirmarItinerarioService` (`@Transactional`) valida
+> existencia/actividad del lugar, transporte propio, solapamiento de horarios (con margen mínimo)
+> y presupuesto excedido, cada una con su excepción propia; una prueba de integración con
+> Testcontainers verifica que el fallo por presupuesto deshace también la escritura ya hecha — ver
+> [docs/capa-negocio.md](capa-negocio.md). Lo que sigue pendiente: que el sistema *sugiera* 1–2
+> itinerarios candidatos (hoy el cliente ya elige las paradas que quiere confirmar).
 
 ## 5 · Alcance
 

@@ -90,8 +90,15 @@ cd backend
 No hace falta `docker compose up` para esto: las pruebas de integración levantan su propio SQL
 Server y Mongo con [Testcontainers](https://testcontainers.com/) (contenedores desechables,
 independientes de los de desarrollo) — solo necesitás Docker corriendo. Las reglas de negocio puras
-(`RecomendacionFiltersTest`) ni siquiera necesitan eso. Detalle de las consultas de negocio y la
-corrección de un problema N+1 real en [docs/consultas-negocio.md](docs/consultas-negocio.md).
+y las pruebas con Mockito (34 pruebas en total) ni siquiera necesitan eso. Detalle de las consultas
+de negocio y la corrección de un problema N+1 real en
+[docs/consultas-negocio.md](docs/consultas-negocio.md); los dos procesos de negocio, sus reglas,
+excepciones, patrones y la prueba de rollback transaccional en
+[docs/capa-negocio.md](docs/capa-negocio.md).
+
+`./gradlew check` (parte de `build`) además verifica con JaCoCo que la capa de negocio
+(`cr.ac.una.smartroute.business*`) tenga al menos 70 % de cobertura de líneas — falla el build si
+no.
 
 ## Integración continua
 
@@ -104,8 +111,10 @@ Testcontainers) y el frontend (`npm run build`) por separado. El estado se puede
 
 Ver el [diagrama de arquitectura](docs/diagrama-arquitectura.md) con el detalle de las capas y su
 interacción, [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md) con el porqué de esa organización
-y las alternativas que se descartaron, y [docs/consultas-negocio.md](docs/consultas-negocio.md) con
-las consultas de negocio (JPQL + Specifications) y la corrección de un problema N+1 real.
+y las alternativas que se descartaron, [docs/consultas-negocio.md](docs/consultas-negocio.md) con
+las consultas de negocio (JPQL + Specifications) y la corrección de un problema N+1 real, y
+[docs/capa-negocio.md](docs/capa-negocio.md) con los dos procesos de negocio, sus patrones y la
+garantía transaccional verificada con rollback.
 
 ## API
 
@@ -113,12 +122,20 @@ las consultas de negocio (JPQL + Specifications) y la corrección de un problema
 | --- | --- | --- |
 | GET | `/api/salud` | Chequeo simple de salud. |
 | GET | `/api/lugares?provinciaId=` | Lugares de una provincia. |
-| POST | `/api/recomendaciones` | Aplica los filtros del Proceso 1 (categorías de interés, provincia, transporte propio, presupuesto) sobre el catálogo de lugares. |
+| POST | `/api/recomendaciones` | Proceso 1: recomienda lugares según el `PerfilPreferencias` del usuario y la provincia pedida. |
+| POST | `/api/itinerarios` | Proceso 2: confirma un itinerario (todo o nada) con las paradas elegidas. |
 
 ```bash
 curl -X POST http://localhost:8080/api/recomendaciones \
   -H "Content-Type: application/json" \
-  -d '{"provinciaId":1,"categoriaIds":[3],"presupuestoMaximo":5000,"tieneTransportePropio":false}'
+  -d '{"usuarioId":1,"provinciaId":1}'
+
+curl -X POST http://localhost:8080/api/itinerarios \
+  -H "Content-Type: application/json" \
+  -d '{"usuarioId":1,"fecha":"2026-12-20","confirmarExcesoPresupuesto":false,"paradas":[
+        {"lugarId":3,"horaInicio":"09:00","horaFin":"11:00"},
+        {"lugarId":4,"horaInicio":"11:30","horaFin":"13:00"}
+      ]}'
 ```
 
 ## Próximos pasos
@@ -128,7 +145,8 @@ curl -X POST http://localhost:8080/api/recomendaciones \
 - [x] ADR de al menos una decisión de arquitectura — [ADR-001](docs/adr/ADR-001-arquitectura-en-capas.md)
 - [x] Modelo de datos relacional (SQL Server) + subdominio documental (MongoDB) — Laboratorio 2 — [docs/modelo-datos.md](docs/modelo-datos.md)
 - [x] Repositorios generalizados, consultas de negocio (JPQL + Specifications) y corrección de un N+1 real, con pruebas de integración vía Testcontainers — Laboratorio 3 — [docs/consultas-negocio.md](docs/consultas-negocio.md)
-- [ ] Flujo de negocio completo de `Lugar` y recomendación (Proceso 1) conectado al frontend
+- [x] Los 2 procesos de negocio como servicios con reglas/excepciones propias, frontera DTO, 2 patrones de diseño (Specification, Factory), transacción con rollback probado y ≥70 % de cobertura JaCoCo — Laboratorio 4 — [docs/capa-negocio.md](docs/capa-negocio.md)
+- [ ] Que el motor de recomendación genere 1–2 itinerarios candidatos completos (hoy se confirman las paradas que el cliente ya eligió)
+- [ ] Flujo de negocio completo conectado al frontend
 - [ ] Que `RecomendacionService` escriba en la bitácora de MongoDB en cada recomendación real
-- [ ] Confirmación de itinerario (Proceso 2) como transacción — Laboratorio 4
 

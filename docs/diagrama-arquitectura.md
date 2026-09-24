@@ -1,10 +1,11 @@
 # Diagrama de arquitectura — SmartRoute
 
 Arquitectura en capas del backend (Spring Boot) y su interacción con el frontend (React) y las
-bases de datos. Refleja el código entregado a la fecha (Laboratorios 1 a 3): el flujo de negocio de
-`Lugar` y la recomendación del Proceso 1, más los repositorios generalizados, las consultas de
-negocio y la corrección del problema N+1 del Laboratorio 3
-(ver [docs/consultas-negocio.md](consultas-negocio.md)).
+bases de datos. Refleja el código entregado a la fecha (Laboratorios 1 a 4): los dos procesos de
+negocio completos (DTO validado → reglas → repositorios en transacción → DTO de salida), los
+repositorios generalizados, las consultas de negocio, la corrección del problema N+1 y la garantía
+transaccional del Proceso 2, verificada con rollback
+(ver [docs/consultas-negocio.md](consultas-negocio.md) y [docs/capa-negocio.md](capa-negocio.md)).
 
 ```mermaid
 flowchart TD
@@ -19,12 +20,17 @@ flowchart TD
             HC["HealthController<br/>GET /api/salud"]
             LC["LugarController<br/>GET /api/lugares"]
             RC["RecomendacionController<br/>POST /api/recomendaciones"]
+            IC["ItinerarioController<br/>POST /api/itinerarios"]
+            GEH["GlobalExceptionHandler"]
         end
 
         subgraph Business["business"]
             LS["LugarService"]
             RS["RecomendacionService"]
             RF["RecomendacionFilters<br/>(funciones puras — filtros del Proceso 1)"]
+            CIS["ConfirmarItinerarioService<br/>@Transactional — Proceso 2"]
+            IF["ItinerarioFactory<br/>(Factory)"]
+            EXC["excepciones de negocio<br/>(business.exception)"]
         end
 
         subgraph Data["data"]
@@ -52,12 +58,17 @@ flowchart TD
     RC --> RS
     RS --> RF
     RS --> LR
+    IC --> CIS
+    CIS --> IF
+    CIS -. "lanza" .-> EXC
+    CIS --> LR
     LR -.-> BASE
     LR -.-> SPEC
     LR --> SQL
     SEED --> RL
     RL -.-> BASE
     RL --> MONGO
+    GEH -. "traduce excepciones a HTTP" .-> EXC
 
     CC -. "aplica CORS sobre /api/**" .-> Presentation
 ```
@@ -72,7 +83,7 @@ recomendación real. Conectar ambas cosas es un paso pendiente (ver más abajo).
 | Capa | Paquete | Responsabilidad | Contenido actual |
 | --- | --- | --- | --- |
 | Presentación | `cr.ac.una.smartroute.presentation` | Recibe peticiones HTTP, valida forma de entrada y devuelve DTOs (nunca entidades JPA). | `HealthController`, `LugarController`, `RecomendacionController`, DTOs en `presentation.dto`. |
-| Negocio | `cr.ac.una.smartroute.business` | Reglas, cálculos y validaciones del dominio. No conoce HTTP; no construye SQL. | `LugarService`, `RecomendacionService`, y `RecomendacionFilters` — los cuatro filtros del Proceso 1 como funciones puras, probadas con JUnit sin Spring ni base de datos (`RecomendacionFiltersTest`). |
+| Negocio | `cr.ac.una.smartroute.business` | Reglas, cálculos y validaciones del dominio. No conoce HTTP; no construye SQL. | `LugarService`, `RecomendacionService` (Proceso 1) y `ConfirmarItinerarioService` (Proceso 2, `@Transactional`), con `RecomendacionFilters` e `ItinerarioFactory` como reglas/construcción puras y `business.exception` como las excepciones propias de cada regla. 24 pruebas (10 JUnit puro + 14 Mockito) y ≥70 % de cobertura JaCoCo — ver [docs/capa-negocio.md](capa-negocio.md). |
 | Datos | `cr.ac.una.smartroute.data` | Acceso y persistencia. | 8 entidades JPA + repositorios generalizados (`BaseRepository` con soporte de Specifications) sobre SQL Server, y `RecomendacionLog` + `BaseMongoRepository` sobre MongoDB. Dos consultas JPQL y dos Specifications documentadas en [docs/consultas-negocio.md](consultas-negocio.md). |
 | Configuración | `cr.ac.una.smartroute.config` | Configuración transversal, fuera del flujo de negocio. | `CorsConfig`. |
 
@@ -94,4 +105,6 @@ para un laboratorio posterior.
 
 - Que `RecomendacionService` escriba en `recomendaciones_log` cada vez que resuelve una
   recomendación real (hoy la colección solo tiene los documentos de ejemplo del seeder).
-- Confirmación de itinerario (Proceso 2) como transacción — Laboratorio 4.
+- Que el motor de recomendación genere 1–2 itinerarios candidatos completos (hoy
+  `ConfirmarItinerarioService` confirma las paradas que el cliente ya eligió, no las sugiere).
+- Conectar `/api/lugares`, `/api/recomendaciones` y `/api/itinerarios` desde el frontend.
