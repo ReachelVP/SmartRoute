@@ -24,6 +24,8 @@ public class ItinerarioParada {
     @JoinColumn(name = "itinerario_id", nullable = false)
     private Itinerario itinerario;
 
+    // LAZY a propósito: ItinerarioConsultaService inicializa este proxy explícitamente antes de
+    // que el controller lo mapee a DTO (ver el comentario en Itinerario.paradas).
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lugar_id", nullable = false)
     private Lugar lugar;

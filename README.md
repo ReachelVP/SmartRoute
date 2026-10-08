@@ -118,6 +118,12 @@ garantía transaccional verificada con rollback.
 
 ## API
 
+La API heredada sin versionar (abajo) sigue abierta para el frontend actual. La API graded del
+Laboratorio 5 vive bajo `/api/v1/**`: versionada, paginada/filtrable, documentada con
+OpenAPI/Swagger y protegida con JWT — detalle completo en
+[docs/api-rest-seguridad.md](docs/api-rest-seguridad.md) y en la colección
+[`backend/api-v1.http`](backend/api-v1.http).
+
 | Método | Endpoint | Descripción |
 | --- | --- | --- |
 | GET | `/api/salud` | Chequeo simple de salud. |
@@ -138,6 +144,27 @@ curl -X POST http://localhost:8080/api/itinerarios \
       ]}'
 ```
 
+### API v1 (JWT)
+
+| Método | Endpoint | Rol/propiedad |
+| --- | --- | --- |
+| POST | `/auth/login` | Público — devuelve el token Bearer. |
+| GET | `/api/v1/lugares`, `/api/v1/lugares/{id}` | Público, paginado/filtrable. |
+| POST/PUT/DELETE | `/api/v1/lugares` / `/{id}` | ADMIN. |
+| GET | `/api/v1/resenas`, `/api/v1/resenas/{id}` | Público, paginado. |
+| POST | `/api/v1/resenas` | Autenticado (usuario sale del token). |
+| POST | `/api/v1/recomendaciones` | Autenticado. |
+| POST | `/api/v1/itinerarios` | Autenticado. |
+| GET | `/api/v1/itinerarios`, `/api/v1/itinerarios/{id}` | Autenticado; USUARIO solo ve los propios, ADMIN ve todos. |
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"correo":"reachel.demo@ejemplo.com","password":"Demo1234!"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+curl http://localhost:8080/api/v1/itinerarios -H "Authorization: Bearer $TOKEN"
+```
+
 ## Próximos pasos
 
 - [x] Propuesta de dominio (entidades y procesos de negocio) — [docs/propuesta-dominio.md](docs/propuesta-dominio.md)
@@ -146,7 +173,8 @@ curl -X POST http://localhost:8080/api/itinerarios \
 - [x] Modelo de datos relacional (SQL Server) + subdominio documental (MongoDB) — Laboratorio 2 — [docs/modelo-datos.md](docs/modelo-datos.md)
 - [x] Repositorios generalizados, consultas de negocio (JPQL + Specifications) y corrección de un N+1 real, con pruebas de integración vía Testcontainers — Laboratorio 3 — [docs/consultas-negocio.md](docs/consultas-negocio.md)
 - [x] Los 2 procesos de negocio como servicios con reglas/excepciones propias, frontera DTO, 2 patrones de diseño (Specification, Factory), transacción con rollback probado y ≥70 % de cobertura JaCoCo — Laboratorio 4 — [docs/capa-negocio.md](docs/capa-negocio.md)
+- [x] API `/api/v1` versionada (verbos/códigos correctos, paginación/filtros/orden), seguridad JWT con 2 roles y verificación de propiedad del recurso (OWASP API1), errores Problem Details (RFC 9457), documentación OpenAPI/Swagger y pruebas de integración de los códigos 201/400/401/403/404/409/422 — Laboratorio 5 — [docs/api-rest-seguridad.md](docs/api-rest-seguridad.md)
 - [ ] Que el motor de recomendación genere 1–2 itinerarios candidatos completos (hoy se confirman las paradas que el cliente ya eligió)
-- [ ] Flujo de negocio completo conectado al frontend
+- [ ] Conectar el frontend a `/api/v1` con login real (hoy sigue consumiendo la API heredada sin autenticación)
 - [ ] Que `RecomendacionService` escriba en la bitácora de MongoDB en cada recomendación real
 

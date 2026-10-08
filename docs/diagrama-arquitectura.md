@@ -85,7 +85,7 @@ recomendación real. Conectar ambas cosas es un paso pendiente (ver más abajo).
 | Presentación | `cr.ac.una.smartroute.presentation` | Recibe peticiones HTTP, valida forma de entrada y devuelve DTOs (nunca entidades JPA). | `HealthController`, `LugarController`, `RecomendacionController`, DTOs en `presentation.dto`. |
 | Negocio | `cr.ac.una.smartroute.business` | Reglas, cálculos y validaciones del dominio. No conoce HTTP; no construye SQL. | `LugarService`, `RecomendacionService` (Proceso 1) y `ConfirmarItinerarioService` (Proceso 2, `@Transactional`), con `RecomendacionFilters` e `ItinerarioFactory` como reglas/construcción puras y `business.exception` como las excepciones propias de cada regla. 24 pruebas (10 JUnit puro + 14 Mockito) y ≥70 % de cobertura JaCoCo — ver [docs/capa-negocio.md](capa-negocio.md). |
 | Datos | `cr.ac.una.smartroute.data` | Acceso y persistencia. | 8 entidades JPA + repositorios generalizados (`BaseRepository` con soporte de Specifications) sobre SQL Server, y `RecomendacionLog` + `BaseMongoRepository` sobre MongoDB. Dos consultas JPQL y dos Specifications documentadas en [docs/consultas-negocio.md](consultas-negocio.md). |
-| Configuración | `cr.ac.una.smartroute.config` | Configuración transversal, fuera del flujo de negocio. | `CorsConfig`. |
+| Configuración | `cr.ac.una.smartroute.config` | Configuración transversal, fuera del flujo de negocio. | `CorsConfig`, `OpenApiConfig`, `SecurityConfig` + `config.security` (JWT: filtro, servicio de tokens, handlers de 401/403). |
 
 ## Regla de dependencia
 
@@ -101,10 +101,19 @@ El frontend (`frontend/`, React + Vite) es un cliente independiente que hoy solo
 `GET /api/salud` para validar la conexión; consumir `/api/lugares` y `/api/recomendaciones` queda
 para un laboratorio posterior.
 
+## Laboratorio 5 — API v1 y seguridad
+
+Además de la API heredada de este diagrama, el backend expone ahora `/api/v1/**`: versionada,
+paginada/filtrable, documentada con OpenAPI/Swagger y protegida con JWT (dos roles, USUARIO y
+ADMIN, y verificación de propiedad del recurso en la capa de negocio — OWASP API1). Las dos APIs
+coexisten a propósito, para no romper el frontend actual mientras no implemente login real.
+Detalle completo en [docs/api-rest-seguridad.md](api-rest-seguridad.md).
+
 ## Próximos pasos
 
 - Que `RecomendacionService` escriba en `recomendaciones_log` cada vez que resuelve una
   recomendación real (hoy la colección solo tiene los documentos de ejemplo del seeder).
 - Que el motor de recomendación genere 1–2 itinerarios candidatos completos (hoy
   `ConfirmarItinerarioService` confirma las paradas que el cliente ya eligió, no las sugiere).
-- Conectar `/api/lugares`, `/api/recomendaciones` y `/api/itinerarios` desde el frontend.
+- Conectar el frontend a `/api/v1` con login real (hoy sigue consumiendo la API heredada sin
+  autenticación).

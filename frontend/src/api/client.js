@@ -21,7 +21,9 @@ async function request(path, options = {}) {
     } catch {
       // el cuerpo no era JSON (p. ej. un 400 de Bean Validation con otro formato)
     }
-    throw new ApiError(res.status, cuerpo?.error, cuerpo?.mensaje)
+    // Desde el Laboratorio 5 los errores vienen como Problem Details (RFC 9457):
+    // {type, title, status, detail, ...}. "detail" es el mensaje de la regla de negocio.
+    throw new ApiError(res.status, cuerpo?.title, cuerpo?.detail)
   }
 
   if (res.status === 204) return null

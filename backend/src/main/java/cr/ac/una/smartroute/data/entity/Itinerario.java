@@ -42,6 +42,11 @@ public class Itinerario {
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
+    // LAZY a propósito (ver ItinerarioRepositoryIT, Lab 3): se queda así. ItinerarioConsultaService
+    // (Lab 5) inicializa esta colección explícitamente con Hibernate.initialize() dentro de la
+    // transacción antes de que el controller la mapee a DTO, en vez de volverla EAGER aquí —
+    // EAGER en una colección usa por defecto un SELECT separado (no un JOIN), lo que habría vuelto
+    // a introducir el N+1 que ese test verifica que no vuelva a aparecer.
     @OneToMany(mappedBy = "itinerario", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orden ASC")
     private List<ItinerarioParada> paradas = new ArrayList<>();

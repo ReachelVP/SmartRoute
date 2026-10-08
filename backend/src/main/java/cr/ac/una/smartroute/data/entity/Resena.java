@@ -23,7 +23,10 @@ public class Resena {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // EAGER a propósito, igual que en Lugar.provincia/categoria (Lab 2): ResenaResponse necesita
+    // el nombre del lugar, y con open-in-view=false no hay sesión abierta para resolver un LAZY
+    // al mapear fuera de la transacción.
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "lugar_id", nullable = false)
     private Lugar lugar;
 

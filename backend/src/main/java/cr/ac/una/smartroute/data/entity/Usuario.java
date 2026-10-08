@@ -35,6 +35,14 @@ public class Usuario {
     @Column(name = "fecha_registro", nullable = false)
     private LocalDateTime fechaRegistro;
 
+    /**
+     * {@code USUARIO} o {@code ADMIN} — Laboratorio 5, autorización por rol. Por defecto
+     * {@code USUARIO}: un {@code new Usuario()} sin rol explícito (como en los tests o en un alta
+     * futura de registro) no debe violar el NOT NULL/CHECK de la columna en la base.
+     */
+    @Column(nullable = false, length = 20)
+    private String rol = "USUARIO";
+
     public Long getId() {
         return id;
     }
@@ -77,5 +85,13 @@ public class Usuario {
 
     public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 }

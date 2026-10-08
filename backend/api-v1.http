@@ -1,0 +1,239 @@
+### SmartRoute — colección de peticiones de la API v1 (Laboratorio 5)
+### Formato .http (soportado por el plugin "REST Client" de VS Code y por IntelliJ/Ultimate
+### de forma nativa). Ejecutar en orden: primero los dos logins, copiar el token de cada
+### respuesta en las variables @tokenUsuario / @tokenAdmin, y de ahí para abajo en cualquier orden.
+###
+### Usuarios de la semilla: Reachel (usuario 1, rol USUARIO) y Kimberley (usuario 2, rol ADMIN).
+### Contraseña de ambos: Demo1234!
+
+@host = http://localhost:8080
+@tokenUsuario = PEGAR_AQUI_EL_TOKEN_DE_REACHEL
+@tokenAdmin = PEGAR_AQUI_EL_TOKEN_DE_KIMBERLEY
+
+### Login — USUARIO (Reachel)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "reachel.demo@ejemplo.com",
+  "password": "Demo1234!"
+}
+
+### Login — ADMIN (Kimberley)
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "kimberley.demo@ejemplo.com",
+  "password": "Demo1234!"
+}
+
+### Login con credenciales inválidas -> 401
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "kimberley.demo@ejemplo.com",
+  "password": "incorrecta"
+}
+
+### ----------------------------------------------------------------------------------------
+### Lugares — lectura pública, escritura solo ADMIN
+### ----------------------------------------------------------------------------------------
+
+### Listar lugares, paginado y filtrado por provincia (público, sin token)
+GET {{host}}/api/v1/lugares?page=0&size=5&sort=nombre,asc&provinciaId=1
+
+### Obtener un lugar por id (público)
+GET {{host}}/api/v1/lugares/3
+
+### Obtener un lugar inexistente -> 404
+GET {{host}}/api/v1/lugares/999999
+
+### Crear un lugar sin token -> 401
+POST {{host}}/api/v1/lugares
+Content-Type: application/json
+
+{
+  "nombre": "Lugar sin token",
+  "provinciaId": 1,
+  "categoriaId": 1,
+  "costoEstimado": 1000,
+  "nivelAccesibilidad": "ALTA",
+  "requiereTransportePropio": false
+}
+
+### Crear un lugar como USUARIO (sin rol ADMIN) -> 403
+POST {{host}}/api/v1/lugares
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "nombre": "No debería crearse",
+  "provinciaId": 1,
+  "categoriaId": 1,
+  "costoEstimado": 1000,
+  "nivelAccesibilidad": "ALTA",
+  "requiereTransportePropio": false
+}
+
+### Crear un lugar con datos inválidos (sin nombre) como ADMIN -> 400
+POST {{host}}/api/v1/lugares
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "provinciaId": 1,
+  "categoriaId": 1,
+  "costoEstimado": 1000,
+  "nivelAccesibilidad": "ALTA",
+  "requiereTransportePropio": false
+}
+
+### Crear un lugar como ADMIN -> 201 + Location
+POST {{host}}/api/v1/lugares
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombre": "Lugar de prueba (api-v1.http)",
+  "descripcion": "Creado desde la colección .http",
+  "provinciaId": 1,
+  "categoriaId": 1,
+  "costoEstimado": 1500,
+  "nivelAccesibilidad": "ALTA",
+  "requiereTransportePropio": false
+}
+
+### Editar un lugar como ADMIN -> 200 (ajustar el id al que devolvió el POST anterior)
+PUT {{host}}/api/v1/lugares/11
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombre": "Lugar de prueba editado",
+  "descripcion": "Editado desde la colección .http",
+  "provinciaId": 1,
+  "categoriaId": 1,
+  "costoEstimado": 2000,
+  "nivelAccesibilidad": "MEDIA",
+  "requiereTransportePropio": false
+}
+
+### Eliminar (baja lógica) un lugar como ADMIN -> 204 (ajustar el id)
+DELETE {{host}}/api/v1/lugares/11
+Authorization: Bearer {{tokenAdmin}}
+
+### ----------------------------------------------------------------------------------------
+### Reseñas — lectura pública, crear requiere estar autenticado
+### ----------------------------------------------------------------------------------------
+
+### Listar reseñas de un lugar (público, paginado)
+GET {{host}}/api/v1/resenas?lugarId=3&page=0&size=10
+
+### Crear una reseña autenticado -> 201 + Location
+POST {{host}}/api/v1/resenas
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "lugarId": 6,
+  "calificacion": 5,
+  "comentario": "Muy buena experiencia (prueba api-v1.http)"
+}
+
+### Repetir la misma reseña (mismo usuario, mismo lugar) -> 409
+POST {{host}}/api/v1/resenas
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "lugarId": 6,
+  "calificacion": 3,
+  "comentario": "Otra vez"
+}
+
+### Calificación fuera de rango (0-5) -> 400
+POST {{host}}/api/v1/resenas
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "lugarId": 2,
+  "calificacion": 8,
+  "comentario": "Calificación inválida"
+}
+
+### ----------------------------------------------------------------------------------------
+### Recomendaciones (Proceso 1) — requiere autenticación
+### ----------------------------------------------------------------------------------------
+
+### Pedir una recomendación sin token -> 401
+POST {{host}}/api/v1/recomendaciones
+Content-Type: application/json
+
+{
+  "provinciaId": 1
+}
+
+### Pedir una recomendación autenticado
+POST {{host}}/api/v1/recomendaciones
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "provinciaId": 1
+}
+
+### ----------------------------------------------------------------------------------------
+### Itinerarios (Proceso 2) — confirmar y consultar, con verificación de propiedad
+### ----------------------------------------------------------------------------------------
+
+### Confirmar un itinerario autenticado -> 201 + Location
+POST {{host}}/api/v1/itinerarios
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "fecha": "2027-03-01",
+  "paradas": [
+    { "lugarId": 4, "orden": 1, "horaInicio": "09:00:00", "horaFin": "11:00:00" }
+  ],
+  "confirmarExcesoPresupuesto": false
+}
+
+### Confirmar un itinerario con horarios solapados -> 422
+POST {{host}}/api/v1/itinerarios
+Authorization: Bearer {{tokenUsuario}}
+Content-Type: application/json
+
+{
+  "fecha": "2027-03-02",
+  "paradas": [
+    { "lugarId": 3, "orden": 1, "horaInicio": "09:00:00", "horaFin": "11:00:00" },
+    { "lugarId": 4, "orden": 2, "horaInicio": "10:00:00", "horaFin": "12:00:00" }
+  ],
+  "confirmarExcesoPresupuesto": false
+}
+
+### Listar mis itinerarios (USUARIO: solo ve los propios)
+GET {{host}}/api/v1/itinerarios?page=0&size=10
+Authorization: Bearer {{tokenUsuario}}
+
+### Listar itinerarios como ADMIN filtrando por usuario
+GET {{host}}/api/v1/itinerarios?usuarioId=1
+Authorization: Bearer {{tokenAdmin}}
+
+### Obtener un itinerario inexistente -> 404
+GET {{host}}/api/v1/itinerarios/999999
+Authorization: Bearer {{tokenUsuario}}
+
+### ----------------------------------------------------------------------------------------
+### Documentación
+### ----------------------------------------------------------------------------------------
+
+### OpenAPI (JSON)
+GET {{host}}/v3/api-docs
+
+### Swagger UI
+GET {{host}}/swagger-ui/index.html
