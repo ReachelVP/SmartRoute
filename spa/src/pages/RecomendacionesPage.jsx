@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ApiError, apiGet, apiPost } from '../api/client'
-import { useUsuarioActual } from '../context/UsuarioContext'
+import { useAuth } from '../auth/AuthContext'
 
 export default function RecomendacionesPage() {
-  const { usuarioActual } = useUsuarioActual()
+  const { sesion } = useAuth()
   const [provincias, setProvincias] = useState([])
   const [provinciaId, setProvinciaId] = useState('')
   const [resultado, setResultado] = useState(null)
@@ -18,15 +18,13 @@ export default function RecomendacionesPage() {
   }, [])
 
   async function pedirRecomendacion() {
-    if (!usuarioActual || !provinciaId) return
+    if (!provinciaId) return
     setCargando(true)
     setError(null)
     setResultado(null)
     try {
-      const respuesta = await apiPost('/api/recomendaciones', {
-        usuarioId: usuarioActual.id,
-        provinciaId: Number(provinciaId),
-      })
+      // v1: el usuario sale del JWT, no se manda en el cuerpo (ver docs/api-rest-seguridad.md).
+      const respuesta = await apiPost('/api/v1/recomendaciones', { provinciaId: Number(provinciaId) })
       setResultado(respuesta)
     } catch (excepcion) {
       setError(excepcion instanceof ApiError ? excepcion.message : 'Ocurrió un error inesperado.')
@@ -39,9 +37,8 @@ export default function RecomendacionesPage() {
     <section className="container">
       <h1>Recomendaciones</h1>
       <p>
-        Proceso 1 del dominio: usa el perfil de preferencias de{' '}
-        <strong>{usuarioActual?.nombre ?? '...'}</strong> (categorías de interés, presupuesto,
-        transporte propio) más la provincia que elijas acá.
+        Proceso 1 del dominio: usa el perfil de preferencias de <strong>{sesion?.nombre}</strong>{' '}
+        (categorías de interés, presupuesto, transporte propio) más la provincia que elijas acá.
       </p>
 
       <div className="form-row">
@@ -55,7 +52,7 @@ export default function RecomendacionesPage() {
             ))}
           </select>
         </label>
-        <button className="btn" type="button" onClick={pedirRecomendacion} disabled={cargando || !usuarioActual}>
+        <button className="btn" type="button" onClick={pedirRecomendacion} disabled={cargando}>
           {cargando ? 'Consultando...' : 'Recomendar'}
         </button>
       </div>

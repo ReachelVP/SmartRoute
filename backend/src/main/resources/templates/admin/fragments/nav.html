@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<nav class="admin-nav" th:fragment="nav">
+  <span class="marca">SmartRoute · Admin</span>
+  <a th:href="@{/admin/lugares}">Lugares</a>
+  <a th:href="@{/admin/categorias}">Categorías</a>
+  <span sec:authentication="name">usuario</span>
+  <form th:action="@{/logout}" method="post">
+    <button type="submit" class="logout">Cerrar sesión</button>
+  </form>
+</nav>
+</body>
+</html>

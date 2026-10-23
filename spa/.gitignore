@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# .env.development y .env.production.example SÍ se commitean (no tienen secretos: la URL de la
+# API no lo es). Un .env.production real, si alguna vez hace falta uno local, no.
+.env.production
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

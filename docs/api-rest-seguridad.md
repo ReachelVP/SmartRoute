@@ -1,12 +1,19 @@
 # API REST versionada y seguridad — SmartRoute (Laboratorio 5)
 
+> **Laboratorio 6 agregó un segundo mecanismo de autenticación** (sesión + formLogin + CSRF, para
+> el módulo administrativo Thymeleaf en `/admin/**`), en una `SecurityFilterChain` totalmente
+> aparte de la que describe este documento. Ver
+> [docs/diagrama-despliegue.md](diagrama-despliegue.md) para el panorama completo y la sección
+> "Dos cadenas de filtros" en `SecurityConfig` para el detalle. La SPA sí terminó migrando a
+> `/api/v1` con login real (la frase de "migrar el frontend... queda pendiente" de abajo ya no
+> aplica).
+
 ## Coexistencia de dos APIs
 
-La API heredada sin versionar (`/api/**`, Labs 1–4) sigue abierta (`permitAll()`) para no romper
-el frontend existente, que todavía no implementa login. La API nueva, graded, vive bajo
-**`/api/v1/**`**: versionada, documentada, paginada/filtrable y protegida con JWT. Es una decisión
-de alcance deliberada bajo el plazo del laboratorio — migrar el frontend a la API v1 con sesión
-real queda pendiente.
+La API heredada sin versionar (`/api/**`, Labs 1–4) sigue abierta (`permitAll()`) — hoy solo la usa
+`LugaresPage` de la SPA (catálogo público) y el chequeo de salud. La API nueva, graded, vive bajo
+**`/api/v1/**`**: versionada, documentada, paginada/filtrable y protegida con JWT, y es la que usa
+el resto de la SPA desde el Laboratorio 6 (login, recomendaciones, itinerarios).
 
 En `SecurityConfig`, las reglas de `/api/v1/**` van **antes** que el `permitAll()` genérico de
 `/api/**`: Spring Security resuelve por la primera regla que haga match, así que si el orden fuera

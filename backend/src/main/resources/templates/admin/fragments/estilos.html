@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<style th:fragment="estilos">
+  :root {
+    --verde: #1b6b3c;
+    --verde-oscuro: #124a28;
+    --fondo: #f5f7f5;
+    --borde: #d8e0d9;
+    --error: #b3261e;
+    --error-fondo: #fdeceb;
+    --ok: #1b6b3c;
+    --ok-fondo: #e7f3ea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    background: var(--fondo);
+    color: #1c1c1c;
+  }
+  nav.admin-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--verde-oscuro);
+    color: white;
+    padding: 0.75rem 1.5rem;
+  }
+  nav.admin-nav a { color: white; text-decoration: none; font-weight: 500; }
+  nav.admin-nav a:hover { text-decoration: underline; }
+  nav.admin-nav .marca { font-weight: 700; font-size: 1.1rem; margin-right: auto; }
+  nav.admin-nav form { margin: 0; }
+  nav.admin-nav button.logout {
+    background: none; border: 1px solid white; color: white; border-radius: 4px;
+    padding: 0.3rem 0.7rem; cursor: pointer;
+  }
+  main.admin-contenido { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { color: var(--verde-oscuro); }
+  .mensaje { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+  .mensaje--ok { background: var(--ok-fondo); color: var(--ok); border: 1px solid var(--ok); }
+  .mensaje--error { background: var(--error-fondo); color: var(--error); border: 1px solid var(--error); }
+  table.admin-tabla { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; }
+  table.admin-tabla th, table.admin-tabla td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--borde); text-align: left; }
+  table.admin-tabla th { background: #eef4ef; }
+  .acciones { display: flex; gap: 0.5rem; }
+  .acciones form { margin: 0; }
+  .boton, button.boton {
+    display: inline-block; background: var(--verde); color: white; border: none;
+    padding: 0.45rem 0.9rem; border-radius: 4px; text-decoration: none; cursor: pointer; font-size: 0.95rem;
+  }
+  .boton:hover { background: var(--verde-oscuro); }
+  .boton--secundario { background: #6b7280; }
+  .boton--peligro { background: var(--error); }
+  .barra-superior { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+  .filtros { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .paginacion { display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; }
+  form.formulario-admin { background: white; padding: 1.5rem; border-radius: 6px; border: 1px solid var(--borde); max-width: 520px; }
+  form.formulario-admin .campo { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  form.formulario-admin label { font-weight: 600; }
+  form.formulario-admin input[type=text], form.formulario-admin input[type=number], form.formulario-admin textarea, form.formulario-admin select {
+    padding: 0.5rem; border: 1px solid var(--borde); border-radius: 4px; font-size: 1rem;
+  }
+  .error-campo { color: var(--error); font-size: 0.85rem; }
+  .login-caja { max-width: 360px; margin: 4rem auto; background: white; padding: 2rem; border-radius: 8px; border: 1px solid var(--borde); }
+</style>
+</head>
+<body></body>
+</html>

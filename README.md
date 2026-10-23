@@ -18,18 +18,20 @@ paseo.
 
 | Capa       | Tecnología                                    |
 | ---------- | ---------------------------------------------- |
-| Backend    | Java 21 · Spring Boot 4 · Gradle              |
-| Frontend   | React · Vite                                  |
-| Base de datos | SQL Server (relacional) · MongoDB (documental) — ver [modelo de datos](docs/modelo-datos.md) |
+| Backend (API + admin) | Java 21 · Spring Boot 4 · Gradle · Thymeleaf (módulo `/admin`) |
+| SPA        | React · Vite                                  |
+| Base de datos | SQL Server (relacional, Azure SQL Database en producción) · MongoDB (documental, MongoDB Atlas en producción) — ver [modelo de datos](docs/modelo-datos.md) |
 | Pruebas    | JUnit 5 (reglas puras) + Testcontainers (integración contra SQL Server/Mongo reales) |
 | CI         | GitHub Actions (`.github/workflows/ci.yml`)   |
+| Despliegue | Render (API + SPA como servicios separados) — ver [docs/diagrama-despliegue.md](docs/diagrama-despliegue.md) |
 
 ## Estructura del repositorio
 
 ```
 SmartRoute/
-├── backend/    # API REST organizada por capas (presentation, business, data, config)
-├── frontend/   # Aplicación web (React + Vite)
+├── backend/    # API REST + módulo admin Thymeleaf, por capas (presentation, business, data, config)
+├── spa/        # Aplicación de una sola página para el usuario final (React + Vite)
+├── render.yaml # Blueprint de despliegue (Render): ambos servicios en un solo archivo
 └── .github/    # Workflows de integración continua
 ```
 
@@ -69,16 +71,21 @@ curl http://localhost:8080/api/salud
 curl http://localhost:8080/actuator/health
 ```
 
-### Frontend
+Con el perfil `dev` (el default local), el backend también sirve el módulo administrativo en
+`http://localhost:8080/admin/lugares` (login en `/login` — usá las credenciales de un usuario con
+rol ADMIN, ver [docs/modelo-datos.md](docs/modelo-datos.md) para los usuarios de semilla).
+
+### SPA
 
 ```bash
-cd frontend
+cd spa
 npm install
 npm run dev
 ```
 
 Queda escuchando en `http://localhost:5173` y se conecta automáticamente al backend en el puerto
-8080 (con el backend corriendo, la página muestra el estado de la conexión).
+8080 (con el backend corriendo, la página muestra el estado de la conexión). Iniciá sesión en
+`/login` con un usuario de la semilla para probar recomendaciones e itinerarios.
 
 ### Pruebas
 
@@ -104,7 +111,7 @@ no.
 
 Cada `push` o `pull request` a `main` dispara el workflow de GitHub Actions (`.github/workflows/ci.yml`),
 que compila y prueba el backend (`./gradlew build`, con sus propias pruebas de integración vía
-Testcontainers) y el frontend (`npm run build`) por separado. El estado se puede ver en la pestaña
+Testcontainers) y la SPA (`npm run build`) por separado. El estado se puede ver en la pestaña
 **Actions** del repositorio.
 
 ## Arquitectura
@@ -118,8 +125,9 @@ garantía transaccional verificada con rollback.
 
 ## API
 
-La API heredada sin versionar (abajo) sigue abierta para el frontend actual. La API graded del
-Laboratorio 5 vive bajo `/api/v1/**`: versionada, paginada/filtrable, documentada con
+La API heredada sin versionar (abajo) sigue abierta — la usan `LugaresPage` (catálogo público) y
+el chequeo de salud de la SPA. El resto de la SPA (login, recomendaciones, itinerarios) y el
+módulo admin Thymeleaf usan `/api/v1/**`: versionada, paginada/filtrable, documentada con
 OpenAPI/Swagger y protegida con JWT — detalle completo en
 [docs/api-rest-seguridad.md](docs/api-rest-seguridad.md) y en la colección
 [`backend/api-v1.http`](backend/api-v1.http).
@@ -165,6 +173,31 @@ TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
 curl http://localhost:8080/api/v1/itinerarios -H "Authorization: Bearer $TOKEN"
 ```
 
+## Despliegue y configuración (Laboratorio 6)
+
+Dos servicios separados en Render (ver [`render.yaml`](render.yaml) y
+[docs/diagrama-despliegue.md](docs/diagrama-despliegue.md)): `smartroute-api` (Docker, API + módulo
+`/admin`) y `smartroute-web` (sitio estático, la SPA). Base relacional en Azure SQL Database, base
+documental en MongoDB Atlas. Guía paso a paso (cuentas, conexión del Blueprint, verificación) en
+[docs/guia-despliegue.md](docs/guia-despliegue.md).
+
+**Perfiles**: `dev` (default local, `application-dev.properties`, valores fijos contra
+`docker compose up`) y `prod` (`application-prod.properties`, todo desde variables de entorno de
+la plataforma — nunca un valor fijo en el repo).
+
+**Variables de entorno de producción** (nombres únicamente — los valores viven en el dashboard de
+Render, nunca acá ni en el historial de Git):
+
+| Variable | Para qué |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | Activa `application-prod.properties` (`prod`) |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Conexión a Azure SQL Database |
+| `MONGODB_URI` | Conexión a MongoDB Atlas |
+| `JWT_SECRET` | Firma de los JWT — distinto del de `application-dev.properties`; Render lo genera solo (`generateValue` en `render.yaml`) |
+| `CORS_ALLOWED_ORIGIN` | URL pública de `smartroute-web`, para que el navegador pueda llamar a la API entre orígenes |
+| `VITE_API_BASE_URL` | (build de `smartroute-web`) URL pública de `smartroute-api` |
+| `PORT` | La inyecta Render — Spring Boot escucha en `${PORT:8080}` |
+
 ## Próximos pasos
 
 - [x] Propuesta de dominio (entidades y procesos de negocio) — [docs/propuesta-dominio.md](docs/propuesta-dominio.md)
@@ -174,7 +207,7 @@ curl http://localhost:8080/api/v1/itinerarios -H "Authorization: Bearer $TOKEN"
 - [x] Repositorios generalizados, consultas de negocio (JPQL + Specifications) y corrección de un N+1 real, con pruebas de integración vía Testcontainers — Laboratorio 3 — [docs/consultas-negocio.md](docs/consultas-negocio.md)
 - [x] Los 2 procesos de negocio como servicios con reglas/excepciones propias, frontera DTO, 2 patrones de diseño (Specification, Factory), transacción con rollback probado y ≥70 % de cobertura JaCoCo — Laboratorio 4 — [docs/capa-negocio.md](docs/capa-negocio.md)
 - [x] API `/api/v1` versionada (verbos/códigos correctos, paginación/filtros/orden), seguridad JWT con 2 roles y verificación de propiedad del recurso (OWASP API1), errores Problem Details (RFC 9457), documentación OpenAPI/Swagger y pruebas de integración de los códigos 201/400/401/403/404/409/422 — Laboratorio 5 — [docs/api-rest-seguridad.md](docs/api-rest-seguridad.md)
+- [x] Módulo administrativo Thymeleaf (lugares y categorías: listado paginado, formulario validado, Post/Redirect/Get, CSRF), SPA en React con login JWT y el proceso principal (confirmar itinerario), despliegue en Render con perfiles `dev`/`prod` y secretos por variable de entorno — Laboratorio 6 — [docs/diagrama-despliegue.md](docs/diagrama-despliegue.md), [docs/guia-despliegue.md](docs/guia-despliegue.md)
 - [ ] Que el motor de recomendación genere 1–2 itinerarios candidatos completos (hoy se confirman las paradas que el cliente ya eligió)
-- [ ] Conectar el frontend a `/api/v1` con login real (hoy sigue consumiendo la API heredada sin autenticación)
 - [ ] Que `RecomendacionService` escriba en la bitácora de MongoDB en cada recomendación real
 

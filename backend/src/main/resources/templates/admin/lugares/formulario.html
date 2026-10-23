@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title th:text="${esNuevo} ? 'SmartRoute · Admin · Nuevo lugar' : 'SmartRoute · Admin · Editar lugar'"></title>
+  <div th:replace="~{admin/fragments/estilos :: estilos}"></div>
+</head>
+<body>
+  <div th:replace="~{admin/fragments/nav :: nav}"></div>
+
+  <main class="admin-contenido">
+    <h1 th:text="${esNuevo} ? 'Nuevo lugar' : 'Editar lugar'"></h1>
+
+    <form th:object="${lugarFormulario}"
+          th:action="${esNuevo} ? @{/admin/lugares/nuevo} : @{/admin/lugares/{id}/editar(id=${id})}"
+          method="post" class="formulario-admin">
+
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input type="text" id="nombre" th:field="*{nombre}"/>
+        <span class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></span>
+      </div>
+
+      <div class="campo">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" th:field="*{descripcion}" rows="3"></textarea>
+      </div>
+
+      <div class="campo">
+        <label for="provinciaId">Provincia</label>
+        <select id="provinciaId" th:field="*{provinciaId}">
+          <option value="">-- Seleccioná --</option>
+          <option th:each="provincia : ${provincias}" th:value="${provincia.id}" th:text="${provincia.nombre}"></option>
+        </select>
+        <span class="error-campo" th:if="${#fields.hasErrors('provinciaId')}" th:errors="*{provinciaId}"></span>
+      </div>
+
+      <div class="campo">
+        <label for="categoriaId">Categoría</label>
+        <select id="categoriaId" th:field="*{categoriaId}">
+          <option value="">-- Seleccioná --</option>
+          <option th:each="categoria : ${categorias}" th:value="${categoria.id}" th:text="${categoria.nombre}"></option>
+        </select>
+        <span class="error-campo" th:if="${#fields.hasErrors('categoriaId')}" th:errors="*{categoriaId}"></span>
+      </div>
+
+      <div class="campo">
+        <label for="costoEstimado">Costo estimado (₡)</label>
+        <input type="number" step="0.01" min="0" id="costoEstimado" th:field="*{costoEstimado}"/>
+        <span class="error-campo" th:if="${#fields.hasErrors('costoEstimado')}" th:errors="*{costoEstimado}"></span>
+      </div>
+
+      <div class="campo">
+        <label for="nivelAccesibilidad">Nivel de accesibilidad</label>
+        <select id="nivelAccesibilidad" th:field="*{nivelAccesibilidad}">
+          <option value="">-- Seleccioná --</option>
+          <option value="ALTA">ALTA</option>
+          <option value="MEDIA">MEDIA</option>
+          <option value="BAJA">BAJA</option>
+        </select>
+        <span class="error-campo" th:if="${#fields.hasErrors('nivelAccesibilidad')}" th:errors="*{nivelAccesibilidad}"></span>
+      </div>
+
+      <div class="campo">
+        <label>
+          <input type="checkbox" th:field="*{requiereTransportePropio}"/>
+          Requiere transporte propio
+        </label>
+      </div>
+
+      <button type="submit" class="boton" th:text="${esNuevo} ? 'Crear' : 'Guardar cambios'"></button>
+      <a th:href="@{/admin/lugares}" class="boton boton--secundario">Cancelar</a>
+    </form>
+  </main>
+</body>
+</html>

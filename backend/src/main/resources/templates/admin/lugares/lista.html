@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>SmartRoute · Admin · Lugares</title>
+  <div th:replace="~{admin/fragments/estilos :: estilos}"></div>
+</head>
+<body>
+  <div th:replace="~{admin/fragments/nav :: nav}"></div>
+
+  <main class="admin-contenido">
+    <div class="barra-superior">
+      <h1>Lugares</h1>
+      <a th:href="@{/admin/lugares/nuevo}" class="boton">+ Nuevo lugar</a>
+    </div>
+
+    <p th:if="${mensaje}" class="mensaje mensaje--ok" th:text="${mensaje}"></p>
+    <p th:if="${error}" class="mensaje mensaje--error" th:text="${error}"></p>
+
+    <form method="get" th:action="@{/admin/lugares}" class="filtros">
+      <select name="provinciaId" onchange="this.form.submit()">
+        <option value="">Todas las provincias</option>
+        <option th:each="provincia : ${provincias}"
+                th:value="${provincia.id}"
+                th:text="${provincia.nombre}"
+                th:selected="${provincia.id == provinciaId}"></option>
+      </select>
+      <select name="categoriaId" onchange="this.form.submit()">
+        <option value="">Todas las categorías</option>
+        <option th:each="categoria : ${categorias}"
+                th:value="${categoria.id}"
+                th:text="${categoria.nombre}"
+                th:selected="${categoria.id == categoriaId}"></option>
+      </select>
+    </form>
+
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Provincia</th>
+          <th>Categoría</th>
+          <th>Costo</th>
+          <th>Accesibilidad</th>
+          <th>Activo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="lugar : ${pagina.content}">
+          <td th:text="${lugar.nombre}"></td>
+          <td th:text="${lugar.provincia.nombre}"></td>
+          <td th:text="${lugar.categoria.nombre}"></td>
+          <td th:text="${'₡' + lugar.costoEstimado}"></td>
+          <td th:text="${lugar.nivelAccesibilidad}"></td>
+          <td th:text="${lugar.activo ? 'Sí' : 'No'}"></td>
+          <td class="acciones">
+            <a th:href="@{/admin/lugares/{id}/editar(id=${lugar.id})}" class="boton boton--secundario">Editar</a>
+            <form th:action="@{/admin/lugares/{id}/eliminar(id=${lugar.id})}" method="post"
+                  onsubmit="return confirm('¿Eliminar (dar de baja) este lugar?');">
+              <button type="submit" class="boton boton--peligro">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${pagina.content.isEmpty()}">
+          <td colspan="7">No hay lugares para este filtro.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="paginacion">
+      <a th:if="${!pagina.first}"
+         th:href="@{/admin/lugares(page=${pagina.number - 1}, provinciaId=${provinciaId}, categoriaId=${categoriaId})}"
+         class="boton boton--secundario">&laquo; Anterior</a>
+      <span th:text="'Página ' + (${pagina.number} + 1) + ' de ' + ${pagina.totalPages}"></span>
+      <a th:if="${!pagina.last}"
+         th:href="@{/admin/lugares(page=${pagina.number + 1}, provinciaId=${provinciaId}, categoriaId=${categoriaId})}"
+         class="boton boton--secundario">Siguiente &raquo;</a>
+    </div>
+  </main>
+</body>
+</html>

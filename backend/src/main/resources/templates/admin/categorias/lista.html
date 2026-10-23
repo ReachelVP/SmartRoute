@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>SmartRoute · Admin · Categorías</title>
+  <div th:replace="~{admin/fragments/estilos :: estilos}"></div>
+</head>
+<body>
+  <div th:replace="~{admin/fragments/nav :: nav}"></div>
+
+  <main class="admin-contenido">
+    <div class="barra-superior">
+      <h1>Categorías</h1>
+      <a th:href="@{/admin/categorias/nuevo}" class="boton">+ Nueva categoría</a>
+    </div>
+
+    <p th:if="${mensaje}" class="mensaje mensaje--ok" th:text="${mensaje}"></p>
+    <p th:if="${error}" class="mensaje mensaje--error" th:text="${error}"></p>
+
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="categoria : ${pagina.content}">
+          <td th:text="${categoria.nombre}"></td>
+          <td th:text="${categoria.descripcion}"></td>
+          <td class="acciones">
+            <a th:href="@{/admin/categorias/{id}/editar(id=${categoria.id})}" class="boton boton--secundario">Editar</a>
+          </td>
+        </tr>
+        <tr th:if="${pagina.content.isEmpty()}">
+          <td colspan="3">No hay categorías registradas.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="paginacion">
+      <a th:if="${!pagina.first}" th:href="@{/admin/categorias(page=${pagina.number - 1})}" class="boton boton--secundario">&laquo; Anterior</a>
+      <span th:text="'Página ' + (${pagina.number} + 1) + ' de ' + ${pagina.totalPages}"></span>
+      <a th:if="${!pagina.last}" th:href="@{/admin/categorias(page=${pagina.number + 1})}" class="boton boton--secundario">Siguiente &raquo;</a>
+    </div>
+  </main>
+</body>
+</html>

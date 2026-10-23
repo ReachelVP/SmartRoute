@@ -70,10 +70,28 @@
 
 .navbar__usuario {
   font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .navbar__usuario select {
   margin-left: 0.25rem;
+}
+
+.navbar__usuario button {
+  background: none;
+  border: 1px solid white;
+  color: white;
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.navbar__usuario a {
+  color: white;
+  text-decoration: underline;
 }
 
 /* Formularios */
@@ -167,4 +185,41 @@
 .status--error {
   background: #fdecea;
   color: #b3261e;
+}
+
+/* Paginación */
+.paginacion {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Login */
+.page--login {
+  max-width: 360px;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.formulario input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
 }

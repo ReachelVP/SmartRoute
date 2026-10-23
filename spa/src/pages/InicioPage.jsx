@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { apiGet } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
 
 export default function InicioPage() {
+  const { estaAutenticado, sesion } = useAuth()
   const [health, setHealth] = useState({ state: 'loading' })
 
   useEffect(() => {
@@ -21,14 +23,21 @@ export default function InicioPage() {
       <div className={`status status--${health.state}`}>
         {health.state === 'loading' && 'Consultando backend...'}
         {health.state === 'ok' && `Backend conectado (${health.data.service}: ${health.data.status})`}
-        {health.state === 'error' && 'No se pudo conectar con el backend. ¿Está corriendo en el puerto 8080?'}
+        {health.state === 'error' && 'No se pudo conectar con el backend.'}
       </div>
 
-      <p className="nota-demo">
-        Todavía no hay login real (llega en el Laboratorio 5) — arriba a la derecha podés elegir
-        con cuál <strong>usuario de prueba</strong> navegar para probar las recomendaciones y la
-        confirmación de itinerarios.
-      </p>
+      {estaAutenticado ? (
+        <p className="nota-demo">
+          Sesión activa como <strong>{sesion.nombre}</strong> ({sesion.rol}). Mirá{' '}
+          <strong>Mis itinerarios</strong> para confirmar uno nuevo, o pedí una{' '}
+          <strong>Recomendación</strong>.
+        </p>
+      ) : (
+        <p className="nota-demo">
+          Iniciá sesión para pedir recomendaciones y confirmar itinerarios — el catálogo de{' '}
+          <strong>Lugares</strong> es público.
+        </p>
+      )}
     </main>
   )
 }

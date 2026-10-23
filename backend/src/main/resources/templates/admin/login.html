@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>SmartRoute · Admin · Ingresar</title>
+  <div th:replace="~{admin/fragments/estilos :: estilos}"></div>
+</head>
+<body>
+  <div class="login-caja">
+    <h1>SmartRoute Admin</h1>
+    <p th:if="${param.error}" class="mensaje mensaje--error">Correo o contraseña incorrectos.</p>
+    <p th:if="${param.logout}" class="mensaje mensaje--ok">Sesión cerrada.</p>
+
+    <form th:action="@{/login}" method="post" class="formulario-admin">
+      <div class="campo">
+        <label for="username">Correo electrónico</label>
+        <input type="text" id="username" name="username" autocomplete="username" required/>
+      </div>
+      <div class="campo">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required/>
+      </div>
+      <button type="submit" class="boton">Ingresar</button>
+    </form>
+  </div>
+</body>
+</html>

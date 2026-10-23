@@ -1,0 +1,52 @@
+# Blueprint de Render (Laboratorio 6): define los dos servicios gestionados de este repo. Al
+# conectar el repo en Render y crear un "Blueprint", esto arma ambos servicios automáticamente —
+# evita configurarlos a mano uno por uno en el dashboard.
+#
+# Los secretos (sync: false) NO quedan en este archivo: Render los pide una sola vez, al crear el
+# Blueprint por primera vez, y de ahí en adelante viven solo en su dashboard. JWT_SECRET usa
+# generateValue en vez de sync: para que Render genere un valor aleatorio él mismo -- así el
+# secreto de producción queda garantizado distinto al de application-dev.properties sin que nadie
+# tenga que inventarlo ni pegarlo a mano.
+
+services:
+  - type: web
+    name: smartroute-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      # URL pública de smartroute-web (abajo). Si Render le asigna un nombre distinto al elegido
+      # acá, actualizar este valor en el dashboard después del primer deploy.
+      - key: CORS_ALLOWED_ORIGIN
+        value: https://smartroute-web.onrender.com
+
+  - type: web
+    name: smartroute-web
+    runtime: static
+    buildCommand: cd spa && npm install && npm run build
+    staticPublishPath: ./spa/dist
+    envVars:
+      # Variable de BUILD (Vite la incrusta en el bundle al compilar, no es de runtime del
+      # navegador). Si Render le asigna un nombre distinto a smartroute-api, actualizar acá y
+      # volver a desplegar este servicio.
+      - key: VITE_API_BASE_URL
+        value: https://smartroute-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

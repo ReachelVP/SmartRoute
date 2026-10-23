@@ -9,6 +9,7 @@ import cr.ac.una.smartroute.data.repository.LugarRepository;
 import cr.ac.una.smartroute.data.repository.ProvinciaRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,6 +41,17 @@ public class LugarAdminService {
     @Transactional(readOnly = true)
     public Lugar obtener(Long id) {
         return lugarRepository.findById(id).orElseThrow(() -> new LugarInexistenteOInactivoException(id));
+    }
+
+    /** Para poblar los <select> de provincia/categoría del formulario administrativo (Lab 6). */
+    @Transactional(readOnly = true)
+    public List<Provincia> listarProvincias() {
+        return provinciaRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Categoria> listarCategorias() {
+        return categoriaRepository.findAll();
     }
 
     @Transactional
