@@ -10,7 +10,10 @@ public record LugarResponse(
         String provincia,
         BigDecimal costoEstimado,
         String nivelAccesibilidad,
-        boolean requiereTransportePropio) {
+        boolean requiereTransportePropio,
+        // Laboratorio 7: el cliente debe devolver esta misma versión en el PUT para poder
+        // detectar bloqueo optimista (ver LugarAdminService.actualizar).
+        Long version) {
 
     public static LugarResponse from(Lugar lugar) {
         return new LugarResponse(
@@ -20,6 +23,7 @@ public record LugarResponse(
                 lugar.getProvincia().getNombre(),
                 lugar.getCostoEstimado(),
                 lugar.getNivelAccesibilidad(),
-                lugar.isRequiereTransportePropio());
+                lugar.isRequiereTransportePropio(),
+                lugar.getVersion());
     }
 }

@@ -70,6 +70,21 @@ public class LugarAdminService {
         return lugarRepository.save(lugar);
     }
 
+    /**
+     * {@code versionEsperada} es la versión que el cliente vio cuando cargó el formulario/GET —
+     * puede que ya no sea la que está en la base. Importante: la entidad que se guarda acá es
+     * {@code paraActualizar}, una instancia {@code new Lugar()} que <b>nunca pasó por el
+     * EntityManager</b>, no la que devuelve {@code obtener(id)}. Si en cambio se reusara esa
+     * última (ya *managed* dentro de esta misma transacción) y solo se le pisara el campo
+     * {@code version} a mano, Hibernate igual generaría el UPDATE comparando contra la versión
+     * con la que la cargó -- la que acaba de leer, siempre la más reciente -- y el pisado manual
+     * no tendría ningún efecto (así se rompió la primera versión de este método). Una instancia
+     * genuinamente *detached* fuerza a Spring Data a resolver {@code save()} como
+     * {@code EntityManager.merge(...)}, que sí compara la versión de la entidad entrante contra la
+     * actual en la base: si no coinciden, lanza
+     * {@link org.springframework.dao.OptimisticLockingFailureException} (bloqueo optimista,
+     * Laboratorio 7) -- {@code GlobalExceptionHandler} la traduce a 409.
+     */
     @Transactional
     public Lugar actualizar(
             Long id,
@@ -79,10 +94,19 @@ public class LugarAdminService {
             Long categoriaId,
             BigDecimal costoEstimado,
             String nivelAccesibilidad,
-            boolean requiereTransportePropio) {
-        Lugar lugar = obtener(id);
-        aplicarCampos(lugar, nombre, descripcion, provinciaId, categoriaId, costoEstimado, nivelAccesibilidad, requiereTransportePropio);
-        return lugarRepository.save(lugar);
+            boolean requiereTransportePropio,
+            Long versionEsperada) {
+        Lugar existente = obtener(id);
+
+        Lugar paraActualizar = new Lugar();
+        paraActualizar.setId(id);
+        paraActualizar.setActivo(existente.isActivo());
+        paraActualizar.setCreadoEn(existente.getCreadoEn());
+        aplicarCampos(
+                paraActualizar, nombre, descripcion, provinciaId, categoriaId, costoEstimado, nivelAccesibilidad, requiereTransportePropio);
+        paraActualizar.setVersion(versionEsperada);
+
+        return lugarRepository.saveAndFlush(paraActualizar);
     }
 
     /** Baja lógica: {@code activo = false}, no se borra la fila (hay itinerarios/reseñas que la referencian). */

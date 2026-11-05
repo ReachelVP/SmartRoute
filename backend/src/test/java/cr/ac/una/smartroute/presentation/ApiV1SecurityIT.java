@@ -67,6 +67,28 @@ class ApiV1SecurityIT extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /**
+     * Laboratorio 7: correo exclusivo de esta prueba (no lo usa ninguna otra) -- el contador de
+     * intentos fallidos de {@code LimitadorIntentosLogin} es un bean singleton compartido por
+     * todas las pruebas de este módulo, así que reusar un correo de otra prueba contaminaría el
+     * conteo en cualquier orden de ejecución.
+     */
+    @Test
+    void login_devuelve429_trasDemasiadosIntentosFallidos() throws Exception {
+        String correo = "fuerza-bruta-it@ejemplo.com";
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"correo\":\"" + correo + "\",\"password\":\"incorrecta\"}"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"correo\":\"" + correo + "\",\"password\":\"incorrecta\"}"))
+                .andExpect(status().isTooManyRequests());
+    }
+
     @Test
     void crearLugar_comoAdmin_devuelve201ConLocation() throws Exception {
         mockMvc.perform(post("/api/v1/lugares")

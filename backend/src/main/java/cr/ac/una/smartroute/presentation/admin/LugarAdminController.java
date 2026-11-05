@@ -6,6 +6,7 @@ import cr.ac.una.smartroute.data.entity.Lugar;
 import cr.ac.una.smartroute.data.specification.LugarSpecifications;
 import cr.ac.una.smartroute.presentation.admin.dto.LugarFormulario;
 import jakarta.validation.Valid;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -132,10 +133,16 @@ public class LugarAdminController {
                     formulario.getCategoriaId(),
                     formulario.getCostoEstimado(),
                     formulario.getNivelAccesibilidad(),
-                    formulario.isRequiereTransportePropio());
+                    formulario.isRequiereTransportePropio(),
+                    formulario.getVersion());
             redirectAttributes.addFlashAttribute("mensaje", "Lugar \"" + actualizado.getNombre() + "\" actualizado.");
         } catch (LugarInexistenteOInactivoException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        } catch (OptimisticLockingFailureException ex) {
+            // Bloqueo optimista (Lab 7): alguien más guardó un cambio sobre este mismo lugar
+            // entre que esta persona abrió el formulario y lo envió.
+            redirectAttributes.addFlashAttribute(
+                    "error", "Alguien más editó este lugar mientras tanto. Recargá la página e intentá de nuevo.");
         }
         return "redirect:/admin/lugares";
     }

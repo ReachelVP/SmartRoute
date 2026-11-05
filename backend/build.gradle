@@ -28,6 +28,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// Laboratorio 7: registros estructurados (JSON) en prod -- ver logback-spring.xml.
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 	implementation 'org.flywaydb:flyway-sqlserver'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'

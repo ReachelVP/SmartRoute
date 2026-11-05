@@ -25,10 +25,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Las pruebas de integracion levantan su propio SQL Server y Mongo con Testcontainers
-      # (AbstractIntegrationTest); el runner de GitHub Actions ya trae Docker, no hace falta
-      # provisionar bases con "services:" ni crear la base de datos a mano.
-      - name: Build with Gradle
+      # Un solo comando hace las tres cosas que pide la rubrica, en orden (Gradle resuelve las
+      # dependencias entre tareas): compileJava, test (unitarias + integracion con Testcontainers
+      # -- el runner ya trae Docker, no hace falta "services:" ni crear la base a mano) y
+      # jacocoTestCoverageVerification (>=70% en el paquete de negocio) antes de empaquetar.
+      - name: Compilar, probar y verificar cobertura (JaCoCo >= 70%)
         run: ./gradlew build
 
   spa-build:
@@ -52,3 +53,21 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Laboratorio 7: despliegue automático, pero solo desde main y solo si las dos verificaciones de
+  # arriba pasaron ("needs") -- a diferencia del auto-deploy nativo de Render (que dispara con
+  # cualquier push, sin enterarse de si CI pasó), este job es el que de verdad gatea el deploy con
+  # el resultado de las pruebas. Los Deploy Hooks de Render son URLs secretas (equivalen a una
+  # credencial: cualquiera que las tenga puede disparar un deploy) -- viven únicamente en GitHub
+  # Secrets, nunca en este archivo ni en AUDITORIA-SEGURIDAD.md.
+  deploy:
+    name: Desplegar a Render
+    runs-on: ubuntu-latest
+    needs: [backend-build, spa-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Disparar deploy de la API
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_API }}"
+
+      - name: Disparar deploy de la SPA
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_SPA }}"

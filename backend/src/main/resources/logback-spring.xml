@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Laboratorio 7: observabilidad mínima, registros estructurados en la salida estándar.
+
+  En "dev" se mantiene el patrón legible de siempre (es el que se lee a mano en la terminal
+  mientras se desarrolla). En "prod" (y por defecto, si no hay perfil activo; p. ej. corriendo el
+  jar suelto) cada línea sale como un objeto JSON a stdout: timestamp, nivel, logger, mensaje,
+  thread. Es el formato que una plataforma de logs (Render, Railway, cualquier agregador) puede
+  indexar y filtrar sin parsear texto libre. Los eventos de seguridad (GlobalExceptionHandler,
+  JwtAuthenticationFilter, AuthService, los handlers de 401/403) ya escriben sus mensajes con
+  pares "campo=valor" (p. ej. "evento_seguridad=login_fallido correo=..."), así que quedan
+  estructurados en ambos formatos: como texto grep-eable en dev, como campo JSON indexable en prod.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProfile name="!prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <springProfile name="prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <!-- Nunca password/token: lo único sensible que se loguea en este sistema son
+                 mensajes de eventos de seguridad ya redactados a propósito (ver las clases
+                 mencionadas arriba); nunca el header Authorization ni la contraseña cruda. -->
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        </appender>
+    </springProfile>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

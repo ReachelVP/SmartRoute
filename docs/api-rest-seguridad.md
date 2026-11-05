@@ -7,6 +7,11 @@
 > "Dos cadenas de filtros" en `SecurityConfig` para el detalle. La SPA sí terminó migrando a
 > `/api/v1` con login real (la frase de "migrar el frontend... queda pendiente" de abajo ya no
 > aplica).
+>
+> **Laboratorio 7** agregó límite de intentos a `POST /auth/login` (429 tras 5 fallos seguidos
+> para el mismo correo, `LimitadorIntentosLogin`) y bloqueo optimista en `PUT /api/v1/lugares/{id}`
+> (campo `version` obligatorio, 409 si está desactualizado) — ver
+> [AUDITORIA-SEGURIDAD.md](../AUDITORIA-SEGURIDAD.md) para el detalle completo de la auditoría.
 
 ## Coexistencia de dos APIs
 

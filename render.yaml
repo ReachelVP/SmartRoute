@@ -7,6 +7,11 @@
 # generateValue en vez de sync: para que Render genere un valor aleatorio él mismo -- así el
 # secreto de producción queda garantizado distinto al de application-dev.properties sin que nadie
 # tenga que inventarlo ni pegarlo a mano.
+#
+# autoDeployTrigger: off (Laboratorio 7) -- el deploy automático de Render en cada push NO se
+# entera de si las pruebas de .github/workflows/ci.yml pasaron o no. El job "deploy" de ese
+# workflow es el único que dispara un deploy acá (vía Deploy Hook), y solo corre si "backend-build"
+# y "spa-build" (compilación + pruebas + cobertura JaCoCo) ya pasaron en verde.
 
 services:
   - type: web
@@ -14,6 +19,7 @@ services:
     runtime: docker
     plan: free
     region: oregon
+    autoDeployTrigger: off
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /actuator/health
@@ -38,6 +44,7 @@ services:
   - type: web
     name: smartroute-web
     runtime: static
+    autoDeployTrigger: off
     buildCommand: cd spa && npm install && npm run build
     staticPublishPath: ./spa/dist
     envVars:

@@ -16,5 +16,8 @@ public record LugarCreateRequest(
         @NotNull(message = "nivelAccesibilidad es obligatorio")
                 @Pattern(regexp = "ALTA|MEDIA|BAJA", message = "nivelAccesibilidad debe ser ALTA, MEDIA o BAJA")
                 String nivelAccesibilidad,
-        boolean requiereTransportePropio) {
+        boolean requiereTransportePropio,
+        // Solo obligatorio para PUT (bloqueo optimista, Laboratorio 7) -- el controlador lo valida
+        // ahí, no acá, porque POST (crear) todavía no tiene una versión que mandar.
+        Long version) {
 }

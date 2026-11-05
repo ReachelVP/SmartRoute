@@ -37,6 +37,12 @@ public class LugarFormulario {
 
     private boolean requiereTransportePropio;
 
+    // Bloqueo optimista (Laboratorio 7): la versión que este formulario traía cuando se abrió,
+    // viaja oculta en el POST y se usa para detectar si alguien más editó el lugar mientras tanto
+    // (ver LugarAdminController y LugarAdminService.actualizar). Null en el formulario de "nuevo",
+    // donde no aplica.
+    private Long version;
+
     public static LugarFormulario desde(Lugar lugar) {
         LugarFormulario formulario = new LugarFormulario();
         formulario.nombre = lugar.getNombre();
@@ -46,6 +52,7 @@ public class LugarFormulario {
         formulario.costoEstimado = lugar.getCostoEstimado();
         formulario.nivelAccesibilidad = lugar.getNivelAccesibilidad();
         formulario.requiereTransportePropio = lugar.isRequiereTransportePropio();
+        formulario.version = lugar.getVersion();
         return formulario;
     }
 
@@ -103,5 +110,13 @@ public class LugarFormulario {
 
     public void setRequiereTransportePropio(boolean requiereTransportePropio) {
         this.requiereTransportePropio = requiereTransportePropio;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

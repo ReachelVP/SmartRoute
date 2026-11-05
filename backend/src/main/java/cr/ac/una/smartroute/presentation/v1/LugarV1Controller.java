@@ -77,6 +77,11 @@ public class LugarV1Controller {
 
     @PutMapping("/{id}")
     public LugarResponse actualizar(@PathVariable Long id, @Valid @RequestBody LugarCreateRequest request) {
+        if (request.version() == null) {
+            // Bloqueo optimista (Laboratorio 7): sin la versión que el cliente leyó, no hay forma
+            // de detectar que alguien más editó el lugar mientras tanto.
+            throw new IllegalArgumentException("version es obligatorio para actualizar un lugar.");
+        }
         Lugar actualizado = lugarAdminService.actualizar(
                 id,
                 request.nombre(),
@@ -85,7 +90,8 @@ public class LugarV1Controller {
                 request.categoriaId(),
                 request.costoEstimado(),
                 request.nivelAccesibilidad(),
-                request.requiereTransportePropio());
+                request.requiereTransportePropio(),
+                request.version());
         return LugarResponse.from(actualizado);
     }
 

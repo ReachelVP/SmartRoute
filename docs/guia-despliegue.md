@@ -1,4 +1,4 @@
-# Guía de despliegue — SmartRoute (Laboratorio 6)
+# Guía de despliegue — SmartRoute (Laboratorios 6 y 7)
 
 Todo el código y la configuración ya están listos (`render.yaml`, `backend/Dockerfile`,
 `application-prod.properties`, CORS configurable). Lo que queda son los pasos que solo se pueden
@@ -84,7 +84,33 @@ Recordá: el plan gratuito de Render suspende `smartroute-api` tras 15 minutos s
 ~1 minuto en reactivarse con la primera petición — normal, ya lo contempla la rúbrica. El sitio
 estático (`smartroute-web`) no se suspende nunca (se sirve desde CDN, no desde una instancia).
 
-## 5. Para el aula virtual, el día de la entrega
+## 5. Laboratorio 7 — despliegue automático desde CI
+
+El `deploy` job de `.github/workflows/ci.yml` dispara el deploy de cada servicio llamando a su
+**Deploy Hook** de Render (una URL que equivale a una credencial — cualquiera con esa URL puede
+disparar un deploy, así que nunca va en el repo ni en `AUDITORIA-SEGURIDAD.md`, solo en GitHub
+Secrets).
+
+1. En Render, por cada servicio (`smartroute-api` y `smartroute-web`): **Settings** → **Deploy
+   Hook** → copiá la URL.
+2. En el mismo **Settings**, apagá **Auto-Deploy** (ponelo en "No" / "Off") para los dos servicios.
+   Ya quedó declarado en `render.yaml` (`autoDeployTrigger: off`), pero si los servicios se
+   crearon con el Blueprint del Laboratorio 6 antes de este cambio, confirmá que el toggle
+   manual también esté apagado — si no, Render va a desplegar en cada push sin esperar a que las
+   pruebas de GitHub Actions pasen, que es justo lo que este laboratorio pide evitar.
+3. Agregá las dos URLs como *secrets* del repositorio — **desde tu propia terminal o la web de
+   GitHub**, nunca pegándolas en el chat (son sensibles, igual que una contraseña):
+   ```bash
+   gh secret set RENDER_DEPLOY_HOOK_API
+   gh secret set RENDER_DEPLOY_HOOK_SPA
+   ```
+   (`gh secret set NOMBRE` sin `--body` te pide el valor de forma interactiva, sin dejarlo en el
+   historial de la terminal). O por la web: **Settings → Secrets and variables → Actions → New
+   repository secret**.
+4. Hecho esto, cualquier push a `main` que pase `backend-build` y `spa-build` dispara el deploy
+   automáticamente. Podés verlo en la pestaña **Actions** del repo, job "Desplegar a Render".
+
+## 6. Para el aula virtual, el día de la entrega
 
 - URL de la API: `https://smartroute-api.onrender.com`
 - URL de la SPA: `https://smartroute-web.onrender.com`

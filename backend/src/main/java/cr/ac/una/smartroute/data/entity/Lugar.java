@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -52,6 +53,16 @@ public class Lugar {
 
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
+
+    /**
+     * Bloqueo optimista (Laboratorio 7): varios administradores pueden editar el mismo lugar al
+     * mismo tiempo (vía {@code /admin/lugares} o vía {@code /api/v1/lugares}). {@code null} en una
+     * entidad nueva es el valor correcto -- así es como Hibernate distingue "insertar" de
+     * "actualizar"; no hace falta un default de Java como el de {@code Usuario.rol}.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     public Long getId() {
         return id;
@@ -132,5 +143,17 @@ public class Lugar {
 
     public void setCreadoEn(LocalDateTime creadoEn) {
         this.creadoEn = creadoEn;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    /**
+     * Ver {@code LugarAdminService.actualizar} (business) -- forzar la versión que vio el cliente
+     * es lo que activa el chequeo real de Hibernate contra la versión actual en la base.
+     */
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

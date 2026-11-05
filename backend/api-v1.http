@@ -105,7 +105,10 @@ Content-Type: application/json
   "requiereTransportePropio": false
 }
 
-### Editar un lugar como ADMIN -> 200 (ajustar el id al que devolvió el POST anterior)
+### Editar un lugar como ADMIN -> 200 (ajustar el id y la version a los que devolvió el GET/POST)
+### Laboratorio 7: "version" es obligatorio -- es la que vino en la respuesta del GET/POST de este
+### mismo lugar. Si alguien más lo editó mientras tanto, reenviar esta misma petición (con la
+### version ya vieja) da 409 -- justo el bloqueo optimista que prueba LugarConcurrenciaIT.
 PUT {{host}}/api/v1/lugares/11
 Authorization: Bearer {{tokenAdmin}}
 Content-Type: application/json
@@ -117,7 +120,8 @@ Content-Type: application/json
   "categoriaId": 1,
   "costoEstimado": 2000,
   "nivelAccesibilidad": "MEDIA",
-  "requiereTransportePropio": false
+  "requiereTransportePropio": false,
+  "version": 0
 }
 
 ### Eliminar (baja lógica) un lugar como ADMIN -> 204 (ajustar el id)

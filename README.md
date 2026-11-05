@@ -198,6 +198,18 @@ Render, nunca acá ni en el historial de Git):
 | `VITE_API_BASE_URL` | (build de `smartroute-web`) URL pública de `smartroute-api` |
 | `PORT` | La inyecta Render — Spring Boot escucha en `${PORT:8080}` |
 
+## Seguridad y robustez (Laboratorio 7)
+
+Auditoría de seguridad completa (lista de verificación + OWASP Top 10:2025) en
+[AUDITORIA-SEGURIDAD.md](AUDITORIA-SEGURIDAD.md).
+
+**Concurrencia — por qué `Lugar` tiene contención real:** el catálogo de lugares lo edita más de
+un administrador (vía `/admin/lugares` o vía `/api/v1/lugares`), así que dos personas pueden abrir
+el mismo lugar para editarlo al mismo tiempo; con bloqueo optimista (`@Version`), quien guarda
+segundo con una versión ya desactualizada recibe 409 en vez de pisar silenciosamente el cambio de
+la primera. Ningún otro recurso del dominio tiene este patrón: `Itinerario` y `PerfilPreferencias`
+son de un solo usuario (nadie más los edita), y `Resena` solo se crea, nunca se edita.
+
 ## Próximos pasos
 
 - [x] Propuesta de dominio (entidades y procesos de negocio) — [docs/propuesta-dominio.md](docs/propuesta-dominio.md)
@@ -208,6 +220,7 @@ Render, nunca acá ni en el historial de Git):
 - [x] Los 2 procesos de negocio como servicios con reglas/excepciones propias, frontera DTO, 2 patrones de diseño (Specification, Factory), transacción con rollback probado y ≥70 % de cobertura JaCoCo — Laboratorio 4 — [docs/capa-negocio.md](docs/capa-negocio.md)
 - [x] API `/api/v1` versionada (verbos/códigos correctos, paginación/filtros/orden), seguridad JWT con 2 roles y verificación de propiedad del recurso (OWASP API1), errores Problem Details (RFC 9457), documentación OpenAPI/Swagger y pruebas de integración de los códigos 201/400/401/403/404/409/422 — Laboratorio 5 — [docs/api-rest-seguridad.md](docs/api-rest-seguridad.md)
 - [x] Módulo administrativo Thymeleaf (lugares y categorías: listado paginado, formulario validado, Post/Redirect/Get, CSRF), SPA en React con login JWT y el proceso principal (confirmar itinerario), despliegue en Render con perfiles `dev`/`prod` y secretos por variable de entorno — Laboratorio 6 — [docs/diagrama-despliegue.md](docs/diagrama-despliegue.md), [docs/guia-despliegue.md](docs/guia-despliegue.md)
+- [x] Auditoría de seguridad (lista de verificación + OWASP Top 10:2025) con hallazgos y correcciones, bloqueo optimista (`@Version`) en `Lugar` con prueba de conflicto, pipeline de GitHub Actions con despliegue automático gateado por las pruebas, protección de `main`, y registros estructurados de eventos de seguridad — Laboratorio 7 — [AUDITORIA-SEGURIDAD.md](AUDITORIA-SEGURIDAD.md)
 - [ ] Que el motor de recomendación genere 1–2 itinerarios candidatos completos (hoy se confirman las paradas que el cliente ya eligió)
 - [ ] Que `RecomendacionService` escriba en la bitácora de MongoDB en cada recomendación real
 

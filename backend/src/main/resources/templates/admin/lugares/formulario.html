@@ -15,6 +15,10 @@
           th:action="${esNuevo} ? @{/admin/lugares/nuevo} : @{/admin/lugares/{id}/editar(id=${id})}"
           method="post" class="formulario-admin">
 
+      <!-- Bloqueo optimista (Lab 7): la versión que se vio al abrir este formulario viaja oculta
+           y vuelve en el POST, para detectar si alguien más editó el lugar mientras tanto. -->
+      <input type="hidden" th:if="${!esNuevo}" th:field="*{version}"/>
+
       <div class="campo">
         <label for="nombre">Nombre</label>
         <input type="text" id="nombre" th:field="*{nombre}"/>

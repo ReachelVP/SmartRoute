@@ -1,6 +1,7 @@
 package cr.ac.una.smartroute.presentation;
 
 import cr.ac.una.smartroute.business.exception.CredencialesInvalidasException;
+import cr.ac.una.smartroute.business.exception.DemasiadosIntentosException;
 import cr.ac.una.smartroute.business.exception.HorariosSolapadosException;
 import cr.ac.una.smartroute.business.exception.ItinerarioInexistenteException;
 import cr.ac.una.smartroute.business.exception.LugarInexistenteOInactivoException;
@@ -14,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -80,16 +82,41 @@ public class GlobalExceptionHandler {
         return problema(HttpStatus.CONFLICT, "Reseña duplicada", ex.getMessage());
     }
 
+    /**
+     * Bloqueo optimista (Laboratorio 7): alguien más guardó un cambio sobre la misma fila entre
+     * que este cliente la leyó y la guardó (ver {@code Lugar.version} y
+     * {@code LugarAdminService.actualizar}).
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail conflictoDeConcurrencia(OptimisticLockingFailureException ex) {
+        log.warn("evento_seguridad=conflicto_concurrencia detalle=\"{}\"", ex.getMessage());
+        return problema(
+                HttpStatus.CONFLICT,
+                "Conflicto de concurrencia",
+                "El recurso fue modificado por otra persona mientras tanto. Recargá los datos e intentá de nuevo.");
+    }
+
     @ExceptionHandler(RecursoNoPropioException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ProblemDetail recursoNoPropio(RecursoNoPropioException ex) {
+        log.warn("evento_seguridad=acceso_denegado detalle=\"{}\"", ex.getMessage());
         return problema(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage());
     }
 
+    // AuthService ya registra el evento de login fallido (con el correo intentado, nunca la
+    // contraseña) en el punto donde ocurre -- acá solo se traduce a HTTP.
     @ExceptionHandler(CredencialesInvalidasException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ProblemDetail credencialesInvalidas(CredencialesInvalidasException ex) {
         return problema(HttpStatus.UNAUTHORIZED, "No autenticado", ex.getMessage());
+    }
+
+    /** Fuerza bruta contra {@code POST /auth/login} (Laboratorio 7, ver {@code LimitadorIntentosLogin}). */
+    @ExceptionHandler(DemasiadosIntentosException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public ProblemDetail demasiadosIntentos(DemasiadosIntentosException ex) {
+        return problema(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos", ex.getMessage());
     }
 
     /** Referencias inválidas en el cuerpo de la petición (p. ej. provinciaId/categoriaId inexistentes). */
